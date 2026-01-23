@@ -1,0 +1,8 @@
+{
+  "name": "Audrey Gruneisen - Portfolio Chef de Projet IA",
+  "description": "Professional portfolio for Audrey Gruneisen, AI Project Manager specializing in RAG systems and innovative educational solutions.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
