@@ -21,14 +21,14 @@ const App: React.FC = () => {
       // Migration pour les anciennes données qui n'auraient pas les outils
       return {
         ...parsed,
-        tools: parsed.tools || INITIAL_TOOLS
+        tools: parsed.tools || INITIAL_TOOLS || []
       };
     }
     return {
       profile: INITIAL_PROFILE,
       projects: INITIAL_PROJECTS,
       skills: INITIAL_SKILLS,
-      tools: INITIAL_TOOLS
+      tools: INITIAL_TOOLS || []
     };
   });
 
