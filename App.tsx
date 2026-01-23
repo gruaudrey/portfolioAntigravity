@@ -51,8 +51,21 @@ const App: React.FC = () => {
     localStorage.setItem('portfolio_messages', JSON.stringify(messages));
   }, [messages]);
 
-  const handleUpdateData = (newData: PortfolioData) => {
+  const handleUpdateData = async (newData: PortfolioData) => {
     setData(newData);
+    // Sauvegarde fichier (si serveur local lancé)
+    if (window.location.hostname === 'localhost') {
+      try {
+        await fetch('http://localhost:3001/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newData),
+        });
+        console.log('Données sauvegardées dans constants.ts');
+      } catch (e) {
+        console.warn('Serveur de sauvegarde non détecté');
+      }
+    }
   };
 
   const handleAddMessage = (msg: Omit<ContactMessage, 'id' | 'date'>) => {
