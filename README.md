@@ -55,7 +55,7 @@ Portfolio professionnel moderne avec panneau d'administration intégré pour gé
 ### Accès au Mode Admin
 
 1. Cliquez sur l'icône **cadenas** 🔒 en haut à droite du portfolio
-2. Entrez le mot de passe : `admin123`
+2. Entrez le mot de passe : 
 3. Vous accédez maintenant au panneau d'administration
 
 ### Modifier vos informations
@@ -76,94 +76,3 @@ Le panneau admin vous permet de modifier :
 
 **Note** : Les modifications sont d'abord stockées dans le localStorage de votre navigateur. Pour les rendre permanentes et visibles par tous, utilisez le bouton de sauvegarde.
 
-## 🚀 Déploiement
-
-### Netlify (Recommandé)
-
-1. **Créer un compte** sur [Netlify](https://www.netlify.com/)
-2. **Connecter votre repo GitHub**
-3. **Configurer le build** :
-   - Build command: `npm run build`
-   - Publish directory: `dist`
-4. **Déployer** 🎉
-
-### Vercel
-
-1. **Créer un compte** sur [Vercel](https://vercel.com/)
-2. **Importer le projet** depuis GitHub
-3. Vercel détecte automatiquement Vite
-4. **Déployer** 🎉
-
-## 📁 Structure du Projet
-
-```
-portfolio-audrey-gruneisen/
-│
-├── components/          # Composants React
-│   ├── AdminPanel.tsx   # Panneau d'administration
-│   ├── Hero.tsx         # Section hero
-│   ├── Projects.tsx     # Section projets
-│   ├── Skills.tsx       # Section compétences
-│   ├── About.tsx        # Section à propos
-│   ├── Contact.tsx      # Formulaire de contact
-│   ├── Header.tsx       # En-tête
-│   └── Footer.tsx       # Pied de page
-│
-├── constants.ts         # Données du portfolio
-├── types.ts             # Types TypeScript
-├── App.tsx              # Composant principal
-├── index.tsx            # Point d'entrée
-├── vite.config.ts       # Configuration Vite
-├── package.json         # Dépendances
-└── README.md            # Documentation (ce fichier)
-```
-
-## 🔧 Scripts Disponibles
-
-```bash
-npm run dev      # Lance le serveur de développement
-npm run build    # Crée la version de production
-npm run preview  # Prévisualise la version de production
-```
-
-## 🔐 Sécurité
-
-**Important** : Le mot de passe du panneau admin est défini dans `App.tsx`. 
-
-Pour changer le mot de passe :
-1. Ouvrez `App.tsx`
-2. Trouvez la ligne `const ADMIN_PASSWORD = 'admin123';`
-3. Changez `'admin123'` par votre mot de passe
-4. **Avant de déployer en production**, utilisez un mot de passe fort !
-
-## 📝 Personnalisation
-
-### Modifier les couleurs
-
-Les couleurs principales sont définies dans les fichiers CSS des composants. Cherchez les classes commençant par `bg-` et `text-` pour les modifier.
-
-### Ajouter des sections
-
-1. Créez un nouveau composant dans le dossier `components/`
-2. Importez-le dans `App.tsx`
-3. Ajoutez-le dans le JSX
-
-## 🤝 Contributions
-
-Ce projet est personnel, mais les suggestions sont les bienvenues !
-
-## 📄 Licence
-
-MIT License - Libre d'utilisation
-
-## 👩‍💼 Contact
-
-**Audrey Gruneisen** - Chef de Projet IA
-
-- LinkedIn : [Votre profil LinkedIn]
-- Email : [Votre email]
-- Portfolio : [URL de votre portfolio en ligne]
-
----
-
-⭐ Si ce projet vous aide, n'hésitez pas à lui donner une étoile sur GitHub !
