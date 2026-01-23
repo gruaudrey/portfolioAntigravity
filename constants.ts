@@ -118,3 +118,18 @@ export const INITIAL_SKILLS: Skill[] = [
     "category": "Technique"
   }
 ];
+
+export const INITIAL_TOOLS: Tool[] = [
+  {
+    id: '1',
+    name: 'VS Code',
+    icon: 'code',
+    category: 'Development'
+  },
+  {
+    id: '2',
+    name: 'Git',
+    icon: 'git-branch',
+    category: 'Development'
+  }
+];
