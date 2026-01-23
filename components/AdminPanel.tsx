@@ -3,9 +3,9 @@ import React, { useState, useRef } from 'react';
 import {
   LogOut, Plus, Trash2, Mail, User, Briefcase, CheckCircle, Sparkles,
   Info, Database, Image as ImageIcon, Cpu, CloudUpload, Upload,
-  Linkedin, Github, Globe, Download, BookOpen
+  Linkedin, Github, Globe, Download, BookOpen, Wrench
 } from 'lucide-react';
-import { PortfolioData, Profile, Project, Skill, SkillLevel, SkillCategory, ContactMessage } from '../types';
+import { PortfolioData, Profile, Project, Skill, SkillLevel, SkillCategory, ContactMessage, Tool, ToolCategory } from '../types';
 
 interface AdminPanelProps {
   data: PortfolioData;
@@ -15,7 +15,7 @@ interface AdminPanelProps {
 }
 
 const AdminPanel: React.FC<AdminPanelProps> = ({ data, setData, messages, onExit }) => {
-  const [activeTab, setActiveTab] = useState<'projects' | 'skills' | 'profile' | 'about' | 'messages' | 'guide'>('projects');
+  const [activeTab, setActiveTab] = useState<'projects' | 'skills' | 'tools' | 'profile' | 'about' | 'messages' | 'guide'>('projects');
   const [isSaving, setIsSaving] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
@@ -126,6 +126,30 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ data, setData, messages, onExit
     updateProfileField('heroTags', newTags);
   };
 
+  // --- LOGIQUE OUTILS ---
+  const addTool = () => {
+    const newTool: Tool = {
+      id: Date.now().toString(),
+      name: 'Nouvel Outil',
+      category: ToolCategory.DEV,
+      description: 'Description de l\'outil...',
+      logoUrl: ''
+    };
+    syncData({ ...data, tools: [...data.tools, newTool] });
+  };
+
+  const updateToolField = (id: string, field: keyof Tool, value: any) => {
+    const updatedTools = data.tools.map(t => t.id === id ? { ...t, [field]: value } : t);
+    syncData({ ...data, tools: updatedTools });
+  };
+
+  const deleteTool = (id: string) => {
+    if (confirm("Confirmer la suppression de cet outil ?")) {
+      const updatedTools = data.tools.filter(t => t.id !== id);
+      syncData({ ...data, tools: updatedTools });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col font-sans text-slate-900">
       <header className="bg-white border-b border-slate-200 px-8 py-4 flex justify-between items-center sticky top-0 z-50">
@@ -171,6 +195,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ data, setData, messages, onExit
           {[
             { id: 'projects', label: 'Mes Projets', icon: <Briefcase size={20} />, count: data.projects.length },
             { id: 'skills', label: 'Compétences', icon: <Cpu size={20} />, count: data.skills.length },
+            { id: 'tools', label: 'Outils', icon: <Wrench size={20} />, count: data.tools.length },
             { id: 'profile', label: 'Hero & Identité', icon: <User size={20} /> },
             { id: 'about', label: 'À Propos', icon: <Info size={20} /> },
             { id: 'messages', label: 'Messages', icon: <Mail size={20} />, count: messages.length },
@@ -301,6 +326,119 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ data, setData, messages, onExit
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {activeTab === 'tools' && (
+            <div className="max-w-5xl mx-auto space-y-12 animate-in fade-in duration-500">
+              <div className="flex justify-between items-end border-b border-slate-200 pb-8">
+                <div>
+                  <h2 className="text-4xl font-black tracking-tighter flex items-center gap-3">
+                    <Wrench className="text-blue-600" size={40} />
+                    Outils & Technologies
+                  </h2>
+                  <p className="text-slate-400 font-bold mt-2 uppercase tracking-widest text-xs">Ajoutez vos logos pour un rendu professionnel</p>
+                </div>
+                <button onClick={addTool} className="bg-gradient-to-r from-blue-600 to-violet-600 text-white px-8 py-4 rounded-2xl font-black flex items-center gap-3 shadow-xl hover:scale-105 transition-all">
+                  <Plus size={20} /> NOUVEL OUTIL
+                </button>
+              </div>
+
+              <div className="grid gap-6">
+                {data.tools.map((tool) => (
+                  <div key={tool.id} className="bg-white p-8 rounded-[2.5rem] border-2 border-slate-200 shadow-sm hover:shadow-xl transition-all relative group">
+                    <button onClick={() => deleteTool(tool.id)} className="absolute top-6 right-6 p-3 text-red-200 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all">
+                      <Trash2 size={20} />
+                    </button>
+
+                    <div className="grid md:grid-cols-12 gap-6">
+                      {/* Logo Upload Section */}
+                      <div className="md:col-span-3 space-y-3">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Logo de l'outil</label>
+                        <div className="aspect-square rounded-2xl overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100 border-4 border-slate-200 shadow-inner relative group/logo">
+                          {tool.logoUrl ? (
+                            <img src={tool.logoUrl} className="w-full h-full object-contain p-4" alt={tool.name} />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Wrench className="text-slate-300" size={48} />
+                            </div>
+                          )}
+                          <label className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center opacity-0 group-hover/logo:opacity-100 transition-opacity cursor-pointer text-white font-bold text-xs">
+                            <Upload size={24} className="mb-2" />
+                            {tool.logoUrl ? 'CHANGER LE LOGO' : 'AJOUTER UN LOGO'}
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                if (e.target.files?.[0]) {
+                                  handleImageUpload(e.target.files[0], (b64) => updateToolField(tool.id, 'logoUrl', b64));
+                                }
+                              }}
+                            />
+                          </label>
+                        </div>
+                        {tool.logoUrl && (
+                          <button
+                            onClick={() => updateToolField(tool.id, 'logoUrl', '')}
+                            className="w-full text-xs text-red-500 hover:text-red-700 font-bold py-2"
+                          >
+                            Supprimer le logo
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Tool Information */}
+                      <div className="md:col-span-9 space-y-6">
+                        <div className="grid md:grid-cols-2 gap-6">
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nom de l'outil</label>
+                            <input
+                              type="text"
+                              value={tool.name}
+                              onChange={e => updateToolField(tool.id, 'name', e.target.value)}
+                              className="w-full border-2 border-slate-200 bg-white rounded-xl px-5 py-4 font-black text-xl focus:border-blue-500 outline-none transition-all"
+                              placeholder="Ex: Python, Figma, Docker..."
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Catégorie</label>
+                            <select
+                              value={tool.category}
+                              onChange={e => updateToolField(tool.id, 'category', e.target.value as ToolCategory)}
+                              className="w-full border-2 border-slate-200 bg-white rounded-xl px-5 py-4 font-bold text-blue-600 outline-none appearance-none cursor-pointer hover:border-blue-300 transition-all"
+                            >
+                              {Object.values(ToolCategory).map(c => <option key={c} value={c}>{c}</option>)}
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Description courte (optionnelle)</label>
+                          <textarea
+                            rows={2}
+                            value={tool.description || ''}
+                            onChange={e => updateToolField(tool.id, 'description', e.target.value)}
+                            className="w-full border-2 border-slate-200 bg-slate-50 rounded-xl px-5 py-4 font-medium text-sm outline-none resize-none focus:bg-white focus:border-blue-500 transition-all"
+                            placeholder="Ex: Langage de programmation pour l'IA et le data science..."
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {data.tools.length === 0 && (
+                <div className="text-center py-20 bg-white rounded-[3rem] border-2 border-dashed border-slate-200">
+                  <div className="inline-flex items-center justify-center w-24 h-24 rounded-3xl bg-gradient-to-br from-blue-50 to-violet-50 mb-4">
+                    <Wrench className="text-blue-400" size={40} />
+                  </div>
+                  <h3 className="text-xl font-black text-slate-400 uppercase tracking-widest">Aucun outil</h3>
+                  <p className="text-slate-400 mt-2">Cliquez sur "Nouvel Outil" pour commencer</p>
+                </div>
+              )}
             </div>
           )}
 

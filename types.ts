@@ -50,10 +50,29 @@ export interface Profile {
   heroTags: HeroTag[];
 }
 
+export enum ToolCategory {
+  AI_ML = 'IA/ML',
+  AUTOMATION = 'Automatisation',
+  DATA = 'Données',
+  DESIGN = 'Design',
+  PROJECT_MGMT = 'Gestion de Projet',
+  DEV = 'Développement',
+  OTHER = 'Autre'
+}
+
+export interface Tool {
+  id: string;
+  name: string;
+  category: ToolCategory;
+  logoUrl?: string;
+  description?: string;
+}
+
 export interface PortfolioData {
   profile: Profile;
   projects: Project[];
   skills: Skill[];
+  tools: Tool[];
 }
 
 export interface ContactMessage {

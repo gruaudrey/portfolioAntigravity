@@ -5,21 +5,30 @@ import Hero from './components/Hero';
 import About from './components/About';
 import Projects from './components/Projects';
 import Skills from './components/Skills';
+import Tools from './components/Tools';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
 import AdminPanel from './components/AdminPanel';
 import { PortfolioData, ContactMessage } from './types';
-import { INITIAL_PROFILE, INITIAL_PROJECTS, INITIAL_SKILLS } from './constants';
+import { INITIAL_PROFILE, INITIAL_PROJECTS, INITIAL_SKILLS, INITIAL_TOOLS } from './constants';
 import { Lock, X } from 'lucide-react';
 
 const App: React.FC = () => {
   const [data, setData] = useState<PortfolioData>(() => {
     const saved = localStorage.getItem('portfolio_data');
-    if (saved) return JSON.parse(saved);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      // Migration pour les anciennes données qui n'auraient pas les outils
+      return {
+        ...parsed,
+        tools: parsed.tools || INITIAL_TOOLS
+      };
+    }
     return {
       profile: INITIAL_PROFILE,
       projects: INITIAL_PROJECTS,
-      skills: INITIAL_SKILLS
+      skills: INITIAL_SKILLS,
+      tools: INITIAL_TOOLS
     };
   });
 
@@ -79,11 +88,11 @@ const App: React.FC = () => {
 
   if (isAdminMode && isAuth) {
     return (
-      <AdminPanel 
-        data={data} 
-        setData={handleUpdateData} 
+      <AdminPanel
+        data={data}
+        setData={handleUpdateData}
         messages={messages}
-        onExit={() => setIsAdminMode(false)} 
+        onExit={() => setIsAdminMode(false)}
       />
     );
   }
@@ -91,7 +100,7 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen relative">
       <Header profile={data.profile} onAdminClick={handleAdminClick} />
-      
+
       <main>
         <div id="home">
           <Hero profile={data.profile} />
@@ -106,24 +115,27 @@ const App: React.FC = () => {
         <section id="skills" className="py-20 bg-white scroll-mt-20">
           <Skills skills={data.skills} />
         </section>
+        <section id="tools" className="py-20 bg-slate-50 scroll-mt-20">
+          <Tools tools={data.tools} />
+        </section>
         <section id="contact" className="py-20 bg-slate-50 scroll-mt-20">
           <Contact profile={data.profile} onSendMessage={handleAddMessage} />
         </section>
       </main>
-      
+
       <Footer profile={data.profile} />
 
       {/* Login Modal */}
       {showLoginModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 relative animate-in zoom-in-95 duration-300">
-            <button 
+            <button
               onClick={() => setShowLoginModal(false)}
               className="absolute top-6 right-6 text-slate-400 hover:text-slate-600 transition-colors"
             >
               <X size={24} />
             </button>
-            
+
             <div className="flex flex-col items-center text-center mb-8">
               <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-4">
                 <Lock size={32} />
@@ -140,9 +152,8 @@ const App: React.FC = () => {
                   placeholder="Mot de passe"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className={`w-full px-5 py-4 rounded-2xl border-2 outline-none transition-all ${
-                    loginError ? 'border-red-500 focus:ring-red-100' : 'border-slate-100 focus:border-blue-500 focus:ring-4 focus:ring-blue-50'
-                  }`}
+                  className={`w-full px-5 py-4 rounded-2xl border-2 outline-none transition-all ${loginError ? 'border-red-500 focus:ring-red-100' : 'border-slate-100 focus:border-blue-500 focus:ring-4 focus:ring-blue-50'
+                    }`}
                 />
                 {loginError && (
                   <p className="text-red-500 text-sm font-bold mt-2 ml-2">Mot de passe incorrect.</p>

@@ -15,6 +15,7 @@ const Header: React.FC<HeaderProps> = ({ profile, onAdminClick }) => {
     { name: 'À propos', id: 'about' },
     { name: 'Projets', id: 'projects' },
     { name: 'Compétences', id: 'skills' },
+    { name: 'Outils', id: 'tools' },
     { name: 'Contact', id: 'contact' },
   ];
 
@@ -37,10 +38,10 @@ const Header: React.FC<HeaderProps> = ({ profile, onAdminClick }) => {
     <header className="fixed top-0 left-0 right-0 z-50 glass-header border-b border-violet-100/50">
       {/* Background Dot Pattern inside header for tech feel */}
       <div className="absolute inset-0 bg-dot-pattern opacity-[0.2] pointer-events-none"></div>
-      
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="flex justify-between items-center h-20">
-          <button 
+          <button
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             className="flex items-center gap-3 hover:opacity-70 transition-all group"
           >
@@ -99,7 +100,7 @@ const Header: React.FC<HeaderProps> = ({ profile, onAdminClick }) => {
                 {link.name}
               </button>
             ))}
-            <button 
+            <button
               onClick={onAdminClick}
               className="w-full py-4 text-slate-400 font-bold text-sm"
             >
