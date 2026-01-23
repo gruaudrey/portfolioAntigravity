@@ -18,11 +18,28 @@ app.post('/save', (req, res) => {
         return res.status(400).send('Données incomplètes');
     }
 
-    // Reconstruction du fichier constants.ts
-    // On utilise JSON.stringify pour formater les données
-    const fileContent = `import { Profile, Project, Skill, SkillLevel, SkillCategory, Tool, ToolCategory } from './types';
+    // Gestion de la photo séparée
+    const photoData = data.profile.photoUrl;
+    if (photoData && photoData.startsWith('data:')) {
+        const photoContent = `export const PHOTO_DATA = "${photoData}";`;
+        try {
+            fs.writeFileSync(path.join(__dirname, 'photo.ts'), photoContent, 'utf8');
+        } catch (e) {
+            console.error("Erreur ecriture photo.ts", e);
+        }
+    }
 
-export const INITIAL_PROFILE: Profile = ${JSON.stringify(data.profile, null, 2)};
+    // Préparation du profil pour constants.ts sans la photo en dur
+    const profileForConstants = { ...data.profile };
+    profileForConstants.photoUrl = "%%%PHOTO_DATA%%%";
+
+    const profileString = JSON.stringify(profileForConstants, null, 2).replace('"%%%PHOTO_DATA%%%"', 'PHOTO_DATA');
+
+    // Reconstruction du fichier constants.ts
+    const fileContent = `import { Profile, Project, Skill, SkillLevel, SkillCategory, Tool, ToolCategory } from './types';
+import { PHOTO_DATA } from './photo';
+
+export const INITIAL_PROFILE: Profile = ${profileString};
 
 export const INITIAL_PROJECTS: Project[] = ${JSON.stringify(data.projects, null, 2)};
 
