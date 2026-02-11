@@ -34,6 +34,9 @@ export async function getPortfolioData(): Promise<PortfolioData | null> {
  */
 export async function savePortfolioData(data: PortfolioData): Promise<boolean> {
     try {
+        // Log pour débugger
+        console.log('📤 Données envoyées à Supabase:', JSON.stringify(data, null, 2));
+
         const { error } = await supabase
             .from('portfolio_data')
             .upsert({
@@ -47,6 +50,7 @@ export async function savePortfolioData(data: PortfolioData): Promise<boolean> {
             return false;
         }
 
+        console.log('✅ Sauvegarde réussie dans Supabase');
         return true;
     } catch (error) {
         console.error('Erreur inattendue:', error);

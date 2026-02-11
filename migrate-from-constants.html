@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Migration des données vers Supabase</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1976D2;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+        }
+
+        .success {
+            background: #c8e6c9;
+            color: #2e7d32;
+        }
+
+        .error {
+            background: #ffcdd2;
+            color: #c62828;
+        }
+
+        .loading {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Migration des données vers Supabase</h1>
+
+        <div class="info">
+            <p><strong>Ce script va :</strong></p>
+            <ul>
+                <li>Charger les données initiales depuis constants.ts</li>
+                <li>Les envoyer vers votre base de données Supabase</li>
+                <li>Initialiser votre portfolio avec toutes les données (profil, projets, compétences, outils)</li>
+            </ul>
+        </div>
+
+        <button id="migrateBtn" onclick="migrateData()">Migrer les données vers Supabase</button>
+
+        <div id="result"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module">
+        // Configuration Supabase
+        const SUPABASE_URL = 'https://bqgwjxlqhqkqmgxqvqmz.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZ3dqeGxxaHFrcW1neHF2cW16Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzczOTMwNzcsImV4cCI6MjA1Mjk2OTA3N30.rNVnANQbRwGUQZVJvKNXBCp_sPHXmSJDXgIWJBKtQWo';
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Données initiales du portfolio (copiées depuis constants.ts)
+        const INITIAL_DATA = {
+            profile: {
+                name: "Audrey Gruneisen",
+                title: "Cheffe de Projet IA",
+                photoUrl: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAyAAAAMgCAIAAABUEpE/...", // Tronqué pour la lisibilité
+                bio: "Passionnée par l'intelligence artificielle et l'innovation technologique, je mets mon expertise au service de projets ambitieux.",
+                email: "audrey.gruneisen@example.com",
+                phone: "+33 6 12 34 56 78",
+                location: "Lyon, France",
+                socialLinks: {
+                    linkedin: "https://linkedin.com/in/audrey-gruneisen",
+                    github: "https://github.com/audrey-gruneisen",
+                    twitter: "https://twitter.com/audrey_gruneisen"
+                }
+            },
+            projects: [
+                {
+                    id: "1",
+                    title: "Plateforme d'Analyse Prédictive",
+                    description: "Développement d'une plateforme d'analyse prédictive utilisant le machine learning pour optimiser les processus industriels.",
+                    image: "/projects/predictive-analytics.jpg",
+                    technologies: ["Python", "TensorFlow", "React", "PostgreSQL"],
+                    link: "https://github.com/audrey-gruneisen/predictive-analytics",
+                    featured: true
+                },
+                {
+                    id: "2",
+                    title: "Chatbot Intelligent",
+                    description: "Création d'un chatbot conversationnel basé sur GPT pour améliorer le service client.",
+                    image: "/projects/chatbot.jpg",
+                    technologies: ["Python", "OpenAI API", "FastAPI", "Vue.js"],
+                    link: "https://github.com/audrey-gruneisen/intelligent-chatbot",
+                    featured: true
+                },
+                {
+                    id: "3",
+                    title: "Système de Recommandation",
+                    description: "Implémentation d'un système de recommandation personnalisé pour une plateforme e-commerce.",
+                    image: "/projects/recommendation-system.jpg",
+                    technologies: ["Python", "Scikit-learn", "MongoDB", "Docker"],
+                    link: "https://github.com/audrey-gruneisen/recommendation-system",
+                    featured: false
+                }
+            ],
+            skills: [
+                {
+                    id: "1",
+                    name: "Python",
+                    level: "expert",
+                    category: "programming"
+                },
+                {
+                    id: "2",
+                    name: "Machine Learning",
+                    level: "expert",
+                    category: "ai"
+                },
+                {
+                    id: "3",
+                    name: "TensorFlow",
+                    level: "advanced",
+                    category: "ai"
+                },
+                {
+                    id: "4",
+                    name: "React",
+                    level: "advanced",
+                    category: "frontend"
+                },
+                {
+                    id: "5",
+                    name: "Node.js",
+                    level: "intermediate",
+                    category: "backend"
+                },
+                {
+                    id: "6",
+                    name: "Docker",
+                    level: "intermediate",
+                    category: "devops"
+                }
+            ],
+            tools: [
+                {
+                    id: "1",
+                    name: "VS Code",
+                    description: "Éditeur de code principal",
+                    icon: "💻",
+                    category: "development"
+                },
+                {
+                    id: "2",
+                    name: "Jupyter",
+                    description: "Notebooks pour l'analyse de données",
+                    icon: "📊",
+                    category: "data-science"
+                },
+                {
+                    id: "3",
+                    name: "Git",
+                    description: "Contrôle de version",
+                    icon: "🔧",
+                    category: "development"
+                },
+                {
+                    id: "4",
+                    name: "Figma",
+                    description: "Design et prototypage",
+                    icon: "🎨",
+                    category: "design"
+                }
+            ]
+        };
+
+        window.migrateData = async function () {
+            const resultDiv = document.getElementById('result');
+            const migrateBtn = document.getElementById('migrateBtn');
+
+            try {
+                migrateBtn.disabled = true;
+                resultDiv.className = 'result loading';
+                resultDiv.innerHTML = '<p>Migration en cours...</p>';
+
+                console.log('📤 Envoi des données vers Supabase:', INITIAL_DATA);
+
+                // Envoyer les données vers Supabase
+                const { data, error } = await supabase
+                    .from('portfolio_data')
+                    .upsert({
+                        id: 1,
+                        content: INITIAL_DATA,
+                        updated_at: new Date().toISOString()
+                    });
+
+                if (error) {
+                    throw error;
+                }
+
+                resultDiv.className = 'result success';
+                resultDiv.innerHTML = `
+                    <h3>✅ Migration réussie !</h3>
+                    <p>Les données ont été migrées avec succès vers Supabase.</p>
+                    <p><strong>Données migrées :</strong></p>
+                    <ul>
+                        <li>Profil : ${INITIAL_DATA.profile.name}</li>
+                        <li>Projets : ${INITIAL_DATA.projects.length} projets</li>
+                        <li>Compétences : ${INITIAL_DATA.skills.length} compétences</li>
+                        <li>Outils : ${INITIAL_DATA.tools.length} outils</li>
+                    </ul>
+                    <p>Vous pouvez maintenant vérifier dans Supabase (Table Editor > portfolio_data)</p>
+                `;
+
+                console.log('✅ Migration réussie');
+
+            } catch (error) {
+                console.error('❌ Erreur lors de la migration:', error);
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `
+                    <h3>❌ Erreur lors de la migration</h3>
+                    <p>${error.message}</p>
+                    <pre>${JSON.stringify(error, null, 2)}</pre>
+                `;
+            } finally {
+                migrateBtn.disabled = false;
+            }
+        };
+    </script>
+</body>
+
+</html>

@@ -155,6 +155,35 @@ const App: React.FC = () => {
         </section>
       </main>
 
+      {/* Bouton temporaire de migration */}
+      <div style={{ position: 'fixed', bottom: '20px', right: '20px', zIndex: 1000 }}>
+        <button
+          onClick={async () => {
+            if (confirm('Voulez-vous migrer toutes vos données vers Supabase ?')) {
+              const success = await savePortfolioData(data);
+              if (success) {
+                alert('✅ Migration réussie ! Vos données sont maintenant dans Supabase.');
+              } else {
+                alert('❌ Erreur lors de la migration. Vérifiez la console.');
+              }
+            }
+          }}
+          style={{
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            color: 'white',
+            padding: '15px 25px',
+            border: 'none',
+            borderRadius: '10px',
+            fontSize: '14px',
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)'
+          }}
+        >
+          🚀 Migrer vers Supabase
+        </button>
+      </div>
+
       <Footer profile={data.profile} />
 
       {/* Login Modal */}
