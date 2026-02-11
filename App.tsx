@@ -10,7 +10,7 @@ import Contact from './components/Contact';
 import Footer from './components/Footer';
 import AdminPanel from './components/AdminPanel';
 import { PortfolioData, ContactMessage } from './types';
-import { INITIAL_PROFILE, INITIAL_PROJECTS, INITIAL_SKILLS, INITIAL_TOOLS } from './constants';
+import { INITIAL_PROFILE, INITIAL_PROJECTS, INITIAL_SKILLS } from './constants';
 import { Lock, X } from 'lucide-react';
 import { getPortfolioData, savePortfolioData, getContactMessages, addContactMessage, verifyAdminPassword } from './lib/supabaseService';
 
@@ -21,14 +21,14 @@ const App: React.FC = () => {
       const parsed = JSON.parse(saved);
       return {
         ...parsed,
-        tools: parsed.tools || INITIAL_TOOLS || []
+        tools: parsed.tools || []
       };
     }
     return {
       profile: INITIAL_PROFILE,
       projects: INITIAL_PROJECTS,
       skills: INITIAL_SKILLS,
-      tools: INITIAL_TOOLS || []
+      tools: []
     };
   });
 
