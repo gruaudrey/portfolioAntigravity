@@ -12,13 +12,13 @@ import AdminPanel from './components/AdminPanel';
 import { PortfolioData, ContactMessage } from './types';
 import { INITIAL_PROFILE, INITIAL_PROJECTS, INITIAL_SKILLS, INITIAL_TOOLS } from './constants';
 import { Lock, X } from 'lucide-react';
+import { getPortfolioData, savePortfolioData, getContactMessages, addContactMessage, verifyAdminPassword } from './lib/supabaseService';
 
 const App: React.FC = () => {
   const [data, setData] = useState<PortfolioData>(() => {
     const saved = localStorage.getItem('portfolio_data');
     if (saved) {
       const parsed = JSON.parse(saved);
-      // Migration pour les anciennes données qui n'auraient pas les outils
       return {
         ...parsed,
         tools: parsed.tools || INITIAL_TOOLS || []
@@ -32,49 +32,67 @@ const App: React.FC = () => {
     };
   });
 
-  const [messages, setMessages] = useState<ContactMessage[]>(() => {
-    const saved = localStorage.getItem('portfolio_messages');
-    return saved ? JSON.parse(saved) : [];
-  });
-
+  const [messages, setMessages] = useState<ContactMessage[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isAdminMode, setIsAdminMode] = useState(false);
   const [isAuth, setIsAuth] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState(false);
 
+  // Charger les données depuis Supabase au démarrage
   useEffect(() => {
-    localStorage.setItem('portfolio_data', JSON.stringify(data));
-  }, [data]);
+    const loadData = async () => {
+      try {
+        // Charger les données du portfolio
+        const portfolioData = await getPortfolioData();
+        if (portfolioData) {
+          setData(portfolioData);
+          // Sauvegarder aussi dans localStorage pour le cache
+          localStorage.setItem('portfolio_data', JSON.stringify(portfolioData));
+        }
 
+        // Charger les messages
+        const contactMessages = await getContactMessages();
+        setMessages(contactMessages);
+      } catch (error) {
+        console.error('Erreur lors du chargement des données:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  // Sauvegarder dans localStorage quand les données changent (cache local)
   useEffect(() => {
-    localStorage.setItem('portfolio_messages', JSON.stringify(messages));
-  }, [messages]);
+    if (!isLoading) {
+      localStorage.setItem('portfolio_data', JSON.stringify(data));
+    }
+  }, [data, isLoading]);
 
   const handleUpdateData = async (newData: PortfolioData) => {
     setData(newData);
-    // Sauvegarde fichier (si serveur local lancé)
-    if (window.location.hostname === 'localhost') {
-      try {
-        await fetch('http://localhost:3001/save', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(newData),
-        });
-        console.log('Données sauvegardées dans constants.ts');
-      } catch (e) {
-        console.warn('Serveur de sauvegarde non détecté');
+
+    // Sauvegarder dans Supabase
+    try {
+      const success = await savePortfolioData(newData);
+      if (success) {
+        console.log('Données sauvegardées dans Supabase');
+      } else {
+        console.error('Erreur lors de la sauvegarde dans Supabase');
       }
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde:', error);
     }
   };
 
-  const handleAddMessage = (msg: Omit<ContactMessage, 'id' | 'date'>) => {
-    const newMessage: ContactMessage = {
-      ...msg,
-      id: Date.now().toString(),
-      date: new Date().toLocaleString()
-    };
-    setMessages(prev => [newMessage, ...prev]);
+  const handleAddMessage = async (msg: Omit<ContactMessage, 'id' | 'date'>) => {
+    const newMessage = await addContactMessage(msg);
+    if (newMessage) {
+      setMessages(prev => [newMessage, ...prev]);
+    }
   };
 
   const handleAdminClick = () => {
@@ -85,9 +103,10 @@ const App: React.FC = () => {
     }
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === "admin123") {
+    const isValid = await verifyAdminPassword(password);
+    if (isValid) {
       setIsAuth(true);
       setIsAdminMode(true);
       setShowLoginModal(false);

@@ -26,28 +26,23 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ data, setData, messages, onExit
     setTimeout(() => setIsSaving(false), 800);
   };
 
-  // Fonction d'export des données vers un fichier constants.ts
+  // Fonction de sauvegarde des données dans Supabase
   const handleExportData = async () => {
     setIsExporting(true);
 
     try {
-      const response = await fetch('/api/save-constants', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
+      // Import dynamique du service Supabase
+      const { savePortfolioData } = await import('../lib/supabaseService');
 
-      const result = await response.json();
+      const success = await savePortfolioData(data);
 
-      if (result.success) {
-        alert('✅ Modifications sauvegardées automatiquement dans constants.ts !\n\nVos changements sont maintenant permanents.');
+      if (success) {
+        alert('✅ Modifications sauvegardées dans Supabase !\n\nVos changements sont maintenant permanents.');
       } else {
-        alert('❌ Erreur lors de la sauvegarde : ' + result.message);
+        alert('❌ Erreur lors de la sauvegarde dans Supabase.\n\nVérifiez votre connexion et les paramètres Supabase.');
       }
-    } catch (error) {
-      alert('❌ Erreur de connexion : ' + error.message);
+    } catch (error: any) {
+      alert('❌ Erreur de connexion : ' + error.message + '\n\nVérifiez que Supabase est correctement configuré.');
     }
 
     setTimeout(() => setIsExporting(false), 1500);
