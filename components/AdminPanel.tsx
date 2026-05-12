@@ -582,6 +582,30 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ data, setData, messages, onExit
                 </h2>
                 <textarea rows={6} value={data.profile.approach} onChange={e => updateProfileField('approach', e.target.value)} className="w-full border border-slate-200 rounded-xl p-6 font-medium italic text-slate-700 outline-none" />
               </section>
+
+              <section className="bg-white p-10 rounded-[3rem] border border-slate-200 shadow-sm space-y-8">
+                <h2 className="text-3xl font-black tracking-tighter flex items-center gap-3">
+                  <CheckCircle size={32} className="text-blue-600" /> Expertises clés (4 cartes)
+                </h2>
+                <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Visibles dans la section "Vision & Approche"</p>
+                <div className="grid md:grid-cols-2 gap-4">
+                  {(data.profile.highlights || []).map((highlight, index) => (
+                    <div key={index} className="flex items-center gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                      <span className="text-[10px] font-black text-slate-300 w-6 shrink-0">0{index + 1}</span>
+                      <input
+                        type="text"
+                        value={highlight}
+                        onChange={e => {
+                          const updated = [...(data.profile.highlights || [])];
+                          updated[index] = e.target.value;
+                          updateProfileField('highlights', updated);
+                        }}
+                        className="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-3 font-black text-slate-900 focus:border-blue-500 outline-none"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </section>
             </div>
           )}
 
