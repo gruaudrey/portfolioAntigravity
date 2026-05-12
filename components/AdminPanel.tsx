@@ -55,15 +55,32 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ data, setData, messages, onExit
     setTimeout(() => setIsExporting(false), 1500);
   };
 
-  // Gestion de l'upload d'image vers Base64
+  // Gestion de l'upload d'image vers Base64 avec compression
   const handleImageUpload = (file: File, callback: (base64: string) => void) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      if (typeof reader.result === 'string') {
-        callback(reader.result);
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+    img.onload = () => {
+      const MAX_SIZE = 1200;
+      const canvas = document.createElement('canvas');
+      let { width, height } = img;
+      if (width > MAX_SIZE || height > MAX_SIZE) {
+        if (width > height) {
+          height = Math.round((height * MAX_SIZE) / width);
+          width = MAX_SIZE;
+        } else {
+          width = Math.round((width * MAX_SIZE) / height);
+          height = MAX_SIZE;
+        }
       }
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx?.drawImage(img, 0, 0, width, height);
+      const compressed = canvas.toDataURL('image/jpeg', 0.8);
+      URL.revokeObjectURL(objectUrl);
+      callback(compressed);
     };
-    reader.readAsDataURL(file);
+    img.src = objectUrl;
   };
 
   // --- LOGIQUE PROJETS ---
