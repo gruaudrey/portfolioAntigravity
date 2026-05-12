@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { ExternalLink, ChevronDown, ChevronUp, Code2, Rocket, ListTodo } from 'lucide-react';
+import { ChevronDown, ChevronUp, Rocket, ListTodo, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Project } from '../types';
 
 interface ProjectsProps {
@@ -9,10 +9,24 @@ interface ProjectsProps {
 
 const ProjectCard: React.FC<{ project: Project }> = ({ project }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+
+  const extraImages = project.images || [];
+
+  const allImages = [
+    ...(project.imageUrl ? [project.imageUrl] : []),
+    ...extraImages,
+  ];
+
+  const openLightbox = (index: number) => setLightboxIndex(index);
+  const closeLightbox = () => setLightboxIndex(null);
+  const prevImage = () => setLightboxIndex((i: number | null) => (i !== null ? (i - 1 + allImages.length) % allImages.length : 0));
+  const nextImage = () => setLightboxIndex((i: number | null) => (i !== null ? (i + 1) % allImages.length : 0));
 
   return (
     <div className="bg-white rounded-[2.5rem] overflow-hidden border border-slate-100 hover:shadow-2xl hover:shadow-violet-500/5 transition-all duration-500 group flex flex-col">
-      <div className="relative h-64 overflow-hidden">
+      {/* Image de couverture */}
+      <div className="relative h-64 overflow-hidden cursor-pointer" onClick={() => openLightbox(0)}>
         <img
           src={project.imageUrl}
           alt={project.title}
@@ -23,6 +37,11 @@ const ProjectCard: React.FC<{ project: Project }> = ({ project }) => {
             {project.badge}
           </span>
         </div>
+        {allImages.length > 1 && (
+          <div className="absolute bottom-4 right-4 bg-black/50 text-white text-[10px] font-bold px-3 py-1 rounded-full backdrop-blur">
+            +{allImages.length - 1} photo{allImages.length > 2 ? 's' : ''}
+          </div>
+        )}
       </div>
 
       <div className="p-8 flex-1 flex flex-col">
@@ -30,18 +49,18 @@ const ProjectCard: React.FC<{ project: Project }> = ({ project }) => {
           <h3 className="text-2xl font-black text-slate-900 tracking-tight">{project.title}</h3>
           <span className="text-xs font-bold text-slate-400">{project.timeline}</span>
         </div>
-        
+
         <p className="text-slate-500 leading-relaxed font-medium mb-8">
           {project.shortDescription}
         </p>
 
         <div className="mt-auto flex flex-wrap gap-2 mb-8">
-           {project.technologies.slice(0, 3).map((tech, i) => (
-             <span key={i} className="px-3 py-1 bg-slate-50 text-slate-500 text-[10px] font-bold rounded-lg border border-slate-100">
-               {tech}
-             </span>
-           ))}
-           {project.technologies.length > 3 && <span className="text-[10px] font-bold text-slate-300">+{project.technologies.length - 3}</span>}
+          {project.technologies.slice(0, 3).map((tech: string, i: number) => (
+            <span key={i} className="px-3 py-1 bg-slate-50 text-slate-500 text-[10px] font-bold rounded-lg border border-slate-100">
+              {tech}
+            </span>
+          ))}
+          {project.technologies.length > 3 && <span className="text-[10px] font-bold text-slate-300">+{project.technologies.length - 3}</span>}
         </div>
 
         <button
@@ -57,27 +76,96 @@ const ProjectCard: React.FC<{ project: Project }> = ({ project }) => {
         {isExpanded && (
           <div className="mt-8 pt-8 border-t border-slate-100 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="grid md:grid-cols-2 gap-8">
-               <div className="space-y-3">
-                  <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
-                    <ListTodo size={14} /> Le Problème
-                  </div>
-                  <p className="text-slate-600 text-sm leading-relaxed">{project.problem}</p>
-               </div>
-               <div className="space-y-3">
-                  <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-violet-600">
-                    <Rocket size={14} /> La Solution
-                  </div>
-                  <p className="text-slate-600 text-sm leading-relaxed">{project.solution}</p>
-               </div>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
+                  <ListTodo size={14} /> Le Problème
+                </div>
+                <p className="text-slate-600 text-sm leading-relaxed">{project.problem}</p>
+              </div>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-violet-600">
+                  <Rocket size={14} /> La Solution
+                </div>
+                <p className="text-slate-600 text-sm leading-relaxed">{project.solution}</p>
+              </div>
             </div>
 
             <div className="bg-violet-50/50 p-6 rounded-[2rem] border border-violet-100/50">
               <span className="block text-[10px] font-black uppercase tracking-widest text-violet-600 mb-2">Impact Direct</span>
               <p className="text-violet-900 font-bold leading-relaxed">{project.impact}</p>
             </div>
+
+            {/* Galerie de photos supplémentaires */}
+            {extraImages.length > 0 && (
+              <div className="space-y-3">
+                <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">Galerie du projet</div>
+                <div className="grid grid-cols-3 gap-3">
+                  {allImages.map((img, idx) => (
+                    <div
+                      key={idx}
+                      className="aspect-video rounded-2xl overflow-hidden cursor-pointer hover:opacity-90 transition-opacity border border-slate-100"
+                      onClick={() => openLightbox(idx)}
+                    >
+                      <img src={img} alt={`${project.title} ${idx + 1}`} className="w-full h-full object-cover" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
+
+      {/* Lightbox */}
+      {lightboxIndex !== null && (
+        <div
+          className="fixed inset-0 z-[200] bg-black/90 flex items-center justify-center p-4"
+          onClick={closeLightbox}
+        >
+          <button
+            onClick={closeLightbox}
+            className="absolute top-6 right-6 text-white bg-white/10 hover:bg-white/20 rounded-full p-2 transition-all"
+          >
+            <X size={24} />
+          </button>
+
+          {allImages.length > 1 && (
+            <>
+              <button
+                onClick={(e) => { e.stopPropagation(); prevImage(); }}
+                className="absolute left-6 text-white bg-white/10 hover:bg-white/20 rounded-full p-3 transition-all"
+              >
+                <ChevronLeft size={28} />
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); nextImage(); }}
+                className="absolute right-6 text-white bg-white/10 hover:bg-white/20 rounded-full p-3 transition-all"
+              >
+                <ChevronRight size={28} />
+              </button>
+            </>
+          )}
+
+          <img
+            src={allImages[lightboxIndex]}
+            alt={project.title}
+            className="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+
+          {allImages.length > 1 && (
+            <div className="absolute bottom-6 flex gap-2">
+              {allImages.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={(e) => { e.stopPropagation(); setLightboxIndex(idx); }}
+                  className={`w-2 h-2 rounded-full transition-all ${idx === lightboxIndex ? 'bg-white w-6' : 'bg-white/40'}`}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
@@ -93,7 +181,7 @@ const Projects: React.FC<ProjectsProps> = ({ projects }) => {
       </div>
 
       <div className="grid md:grid-cols-2 gap-10">
-        {projects.map((project) => (
+        {projects.map((project: Project) => (
           <ProjectCard key={project.id} project={project} />
         ))}
       </div>

@@ -42,7 +42,14 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ data, setData, messages, onExit
         alert('❌ Erreur lors de la sauvegarde dans Supabase.\n\nVérifiez votre connexion et les paramètres Supabase.');
       }
     } catch (error: any) {
-      alert('❌ Erreur de connexion : ' + error.message + '\n\nVérifiez que Supabase est correctement configuré.');
+      const isEnvError = error.message?.includes('manquantes') || error.message?.includes('undefined');
+      alert(
+        '❌ Erreur de connexion Supabase\n\n' +
+        (isEnvError
+          ? 'Les variables d\'environnement VITE_SUPABASE_URL et VITE_SUPABASE_ANON_KEY ne sont pas définies dans Render.\n\nAjoutez-les dans Dashboard Render → Environment.'
+          : 'Détail : ' + error.message
+        )
+      );
     }
 
     setTimeout(() => setIsExporting(false), 1500);
@@ -237,23 +244,66 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ data, setData, messages, onExit
                     </button>
                     <div className="grid lg:grid-cols-12 gap-10">
                       <div className="lg:col-span-4 space-y-6">
-                        <div className="aspect-video rounded-3xl overflow-hidden bg-slate-50 border-4 border-slate-100 shadow-inner relative group/img">
-                          <img src={project.imageUrl} className="w-full h-full object-cover" alt={project.title} />
-                          <label className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity cursor-pointer text-white font-bold text-sm">
-                            <Upload size={24} className="mb-2" />
-                            CHANGER L'IMAGE
-                            <input
-                              type="file"
-                              accept="image/*"
-                              className="hidden"
-                              onChange={(e) => {
-                                if (e.target.files?.[0]) {
-                                  handleImageUpload(e.target.files[0], (b64) => updateProjectField(project.id, 'imageUrl', b64));
-                                }
-                              }}
-                            />
-                          </label>
+                        {/* Image de couverture */}
+                        <div>
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Image de couverture</label>
+                          <div className="aspect-video rounded-3xl overflow-hidden bg-slate-50 border-4 border-slate-100 shadow-inner relative group/img">
+                            <img src={project.imageUrl} className="w-full h-full object-cover" alt={project.title} />
+                            <label className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity cursor-pointer text-white font-bold text-sm">
+                              <Upload size={24} className="mb-2" />
+                              CHANGER L'IMAGE
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => {
+                                  if (e.target.files?.[0]) {
+                                    handleImageUpload(e.target.files[0], (b64) => updateProjectField(project.id, 'imageUrl', b64));
+                                  }
+                                }}
+                              />
+                            </label>
+                          </div>
                         </div>
+
+                        {/* Photos supplémentaires */}
+                        <div>
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Photos supplémentaires</label>
+                          <div className="grid grid-cols-3 gap-2">
+                            {(project.images || []).map((img, idx) => (
+                              <div key={idx} className="relative aspect-square rounded-xl overflow-hidden bg-slate-100 group/thumb">
+                                <img src={img} className="w-full h-full object-cover" alt={`photo ${idx + 1}`} />
+                                <button
+                                  onClick={() => {
+                                    const updated = (project.images || []).filter((_, i) => i !== idx);
+                                    updateProjectField(project.id, 'images', updated);
+                                  }}
+                                  className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover/thumb:opacity-100 transition-opacity"
+                                >
+                                  <Trash2 size={12} />
+                                </button>
+                              </div>
+                            ))}
+                            <label className="aspect-square rounded-xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all text-slate-400 hover:text-blue-500">
+                              <Plus size={20} />
+                              <span className="text-[10px] font-bold mt-1">AJOUTER</span>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => {
+                                  if (e.target.files?.[0]) {
+                                    handleImageUpload(e.target.files[0], (b64) => {
+                                      const updated = [...(project.images || []), b64];
+                                      updateProjectField(project.id, 'images', updated);
+                                    });
+                                  }
+                                }}
+                              />
+                            </label>
+                          </div>
+                        </div>
+
                         <div className="space-y-3">
                           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Badge</label>
                           <input type="text" value={project.badge} onChange={e => updateProjectField(project.id, 'badge', e.target.value)} className="w-full border border-slate-200 rounded-xl p-4 font-black text-blue-600 focus:border-blue-500 outline-none" />

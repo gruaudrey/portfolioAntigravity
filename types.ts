@@ -35,6 +35,7 @@ export interface Project {
   timeline: string;
   link?: string;
   imageUrl?: string;
+  images?: string[];
 }
 
 export interface Profile {
