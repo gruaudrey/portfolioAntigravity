@@ -99,11 +99,11 @@ const ProjectCard: React.FC<{ project: Project }> = ({ project }) => {
             {extraImages.length > 0 && (
               <div className="space-y-3">
                 <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">Galerie du projet</div>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {allImages.map((img, idx) => (
                     <div
                       key={idx}
-                      className="aspect-video rounded-2xl overflow-hidden cursor-pointer hover:opacity-90 transition-opacity border border-slate-100"
+                      className="aspect-video rounded-2xl overflow-hidden cursor-pointer active:opacity-75 hover:opacity-90 transition-opacity border border-slate-100"
                       onClick={() => openLightbox(idx)}
                     >
                       <img src={img} alt={`${project.title} ${idx + 1}`} className="w-full h-full object-cover" />
@@ -119,49 +119,51 @@ const ProjectCard: React.FC<{ project: Project }> = ({ project }) => {
       {/* Lightbox */}
       {lightboxIndex !== null && (
         <div
-          className="fixed inset-0 z-[200] bg-black/90 flex items-center justify-center p-4"
+          className="fixed inset-0 z-[200] bg-black/90 flex flex-col items-center justify-center p-4"
           onClick={closeLightbox}
         >
+          {/* Bouton fermer */}
           <button
             onClick={closeLightbox}
-            className="absolute top-6 right-6 text-white bg-white/10 hover:bg-white/20 rounded-full p-2 transition-all"
+            className="absolute top-4 right-4 text-white bg-white/20 hover:bg-white/30 rounded-full p-3 transition-all"
           >
-            <X size={24} />
+            <X size={22} />
           </button>
 
-          {allImages.length > 1 && (
-            <>
-              <button
-                onClick={(e) => { e.stopPropagation(); prevImage(); }}
-                className="absolute left-6 text-white bg-white/10 hover:bg-white/20 rounded-full p-3 transition-all"
-              >
-                <ChevronLeft size={28} />
-              </button>
-              <button
-                onClick={(e) => { e.stopPropagation(); nextImage(); }}
-                className="absolute right-6 text-white bg-white/10 hover:bg-white/20 rounded-full p-3 transition-all"
-              >
-                <ChevronRight size={28} />
-              </button>
-            </>
-          )}
-
+          {/* Image */}
           <img
             src={allImages[lightboxIndex]}
             alt={project.title}
-            className="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl"
+            className="max-w-full max-h-[75vh] object-contain rounded-xl shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           />
 
+          {/* Navigation bas : flèches + points */}
           {allImages.length > 1 && (
-            <div className="absolute bottom-6 flex gap-2">
-              {allImages.map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={(e) => { e.stopPropagation(); setLightboxIndex(idx); }}
-                  className={`w-2 h-2 rounded-full transition-all ${idx === lightboxIndex ? 'bg-white w-6' : 'bg-white/40'}`}
-                />
-              ))}
+            <div className="flex items-center gap-6 mt-6" onClick={(e) => e.stopPropagation()}>
+              <button
+                onClick={prevImage}
+                className="text-white bg-white/20 hover:bg-white/30 active:bg-white/40 rounded-full p-4 transition-all"
+              >
+                <ChevronLeft size={24} />
+              </button>
+
+              <div className="flex gap-2">
+                {allImages.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setLightboxIndex(idx)}
+                    className={`h-2 rounded-full transition-all ${idx === lightboxIndex ? 'bg-white w-6' : 'bg-white/40 w-2'}`}
+                  />
+                ))}
+              </div>
+
+              <button
+                onClick={nextImage}
+                className="text-white bg-white/20 hover:bg-white/30 active:bg-white/40 rounded-full p-4 transition-all"
+              >
+                <ChevronRight size={24} />
+              </button>
             </div>
           )}
         </div>
