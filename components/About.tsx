@@ -7,7 +7,25 @@ interface AboutProps {
   profile: Profile;
 }
 
+/**
+ * Découpe un texte du type "Comprendre d'abord : ... Valider le plan : ..." en étapes.
+ * Le texte reste modifiable dans l'admin (un seul champ) ; si le format n'est pas reconnu, on l'affiche tel quel.
+ */
+const parseSteps = (text: string): { title: string; body: string }[] | null => {
+  const re = /(?:^|\.\s+)([A-ZÀ-ÖØ-Ý][^.:]{1,45}?)\s:\s/g;
+  const marks = [...text.matchAll(re)];
+  if (marks.length < 2) return null;
+  return marks.map((m, i) => {
+    const start = (m.index ?? 0) + m[0].length;
+    const end = i + 1 < marks.length ? marks[i + 1].index ?? text.length : text.length;
+    return { title: m[1].trim(), body: text.slice(start, end).trim().replace(/\.?$/, '.') };
+  });
+};
+
 const About: React.FC<AboutProps> = ({ profile }) => {
+  const cleanApproach = (profile.approach || '').replace(/^["«»“”\s]+|["«»“”\s]+$/g, '');
+  const steps = parseSteps(cleanApproach);
+
   const iconMap: any = {
     0: <Cpu className="text-violet-600" size={24} />,
     1: <Target className="text-slate-500" size={24} />,
@@ -31,14 +49,34 @@ const About: React.FC<AboutProps> = ({ profile }) => {
             <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:scale-110 transition-transform duration-700 text-slate-200">
                <Rocket size={120} />
             </div>
+            <span className="block text-[11px] font-black uppercase tracking-[0.2em] text-violet-500 mb-4 relative z-10">
+              Ce que je fais
+            </span>
             <p className="text-xl text-slate-600 leading-relaxed font-medium relative z-10">
               {profile.bio}
             </p>
           </div>
           <div className="p-8 md:p-10 bg-violet-50/50 rounded-[3rem] border border-violet-100/30">
-            <p className="text-lg text-violet-900 leading-relaxed italic font-semibold">
-              "{profile.approach}"
-            </p>
+            <span className="block text-[11px] font-black uppercase tracking-[0.2em] text-violet-500 mb-5">
+              Ma méthode{steps ? ` en ${steps.length} étapes` : ''}
+            </span>
+            {steps ? (
+              <ol className="space-y-5">
+                {steps.map((step, i) => (
+                  <li key={i} className="flex gap-4">
+                    <span className="shrink-0 w-9 h-9 rounded-full bg-violet-600 text-white font-black text-sm flex items-center justify-center shadow-md shadow-violet-500/20">
+                      {i + 1}
+                    </span>
+                    <div>
+                      <h3 className="font-black text-slate-900 leading-tight">{step.title}</h3>
+                      <p className="text-slate-600 leading-relaxed mt-1">{step.body}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <p className="text-lg text-violet-900 leading-relaxed font-semibold">{cleanApproach}</p>
+            )}
           </div>
         </div>
 

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ChevronDown, ChevronUp, Rocket, ListTodo, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Project } from '../types';
 
@@ -17,6 +17,44 @@ const ProjectCard: React.FC<{ project: Project }> = ({ project }) => {
     ...(project.imageUrl ? [project.imageUrl] : []),
     ...extraImages,
   ];
+
+  // --- Défilement des images en fondu (au survol sur ordinateur, à l'écran sur mobile) ---
+  const SLIDE_DELAY = 2000;
+  const coverRef = useRef<HTMLDivElement>(null);
+  const [slide, setSlide] = useState(0);
+  const [playing, setPlaying] = useState(false);
+  const [loadedAll, setLoadedAll] = useState(false); // on ne monte les autres images qu'au premier défilement
+  const canSlide =
+    allImages.length > 1 &&
+    !(typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+  const startSlide = () => {
+    if (!canSlide) return;
+    setLoadedAll(true);
+    setPlaying(true);
+  };
+  const stopSlide = () => {
+    setPlaying(false);
+    setSlide(0);
+  };
+
+  useEffect(() => {
+    if (!playing) return;
+    const id = setInterval(() => setSlide((s) => (s + 1) % allImages.length), SLIDE_DELAY);
+    return () => clearInterval(id);
+  }, [playing, allImages.length]);
+
+  // Sur écran tactile (pas de survol) : défile quand la carte est bien visible
+  useEffect(() => {
+    if (!canSlide || !coverRef.current) return;
+    if (!window.matchMedia('(hover: none)').matches) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => (entry.isIntersecting ? startSlide() : stopSlide()),
+      { threshold: 0.7 }
+    );
+    obs.observe(coverRef.current);
+    return () => obs.disconnect();
+  }, [canSlide]);
 
   const openLightbox = (index: number) => setLightboxIndex(index);
   const closeLightbox = () => setLightboxIndex(null);
@@ -39,13 +77,45 @@ const ProjectCard: React.FC<{ project: Project }> = ({ project }) => {
         style={{ background: 'radial-gradient(420px circle at var(--mx, 50%) var(--my, 50%), rgba(139,92,246,0.16), transparent 60%)' }}
       ></div>
       {/* Image de couverture */}
-      <div className="relative h-64 overflow-hidden cursor-pointer" onClick={() => openLightbox(0)}>
-        <img
-          src={project.imageUrl}
-          alt={project.title}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-        />
-        <div className="absolute top-6 left-6">
+      <div
+        ref={coverRef}
+        className="relative h-64 overflow-hidden cursor-pointer"
+        onClick={() => openLightbox(slide)}
+        onMouseEnter={startSlide}
+        onMouseLeave={stopSlide}
+      >
+        {/* Pile d'images : la courante est visible, les autres en fondu */}
+        {(loadedAll ? allImages : allImages.slice(0, 1)).map((src, i) => (
+          <img
+            key={i}
+            src={src}
+            alt={i === slide ? `${project.title}${allImages.length > 1 ? ` (image ${i + 1} sur ${allImages.length})` : ''}` : ''}
+            aria-hidden={i === slide ? undefined : true}
+            className={`absolute inset-0 w-full h-full object-cover transition-[opacity,transform] ease-in-out ${
+              i === slide
+                ? `opacity-100 ${playing ? 'scale-110 duration-[2600ms]' : 'scale-100 group-hover:scale-105 duration-700'}`
+                : 'opacity-0 scale-100 duration-[900ms]'
+            }`}
+          />
+        ))}
+        {allImages.length === 0 && project.imageUrl && (
+          <img src={project.imageUrl} alt={project.title} className="absolute inset-0 w-full h-full object-cover" />
+        )}
+        {/* Repères de progression */}
+        {allImages.length > 1 && (
+          <div
+            className={`absolute bottom-4 left-6 z-20 flex gap-1.5 transition-opacity duration-300 ${playing ? 'opacity-100' : 'opacity-0'}`}
+            aria-hidden="true"
+          >
+            {allImages.map((_, i) => (
+              <span
+                key={i}
+                className={`h-1.5 rounded-full bg-white shadow transition-all duration-500 ${i === slide ? 'w-6 opacity-100' : 'w-1.5 opacity-60'}`}
+              ></span>
+            ))}
+          </div>
+        )}
+        <div className="absolute top-6 left-6 z-20">
           <span className="px-4 py-1.5 bg-white/95 backdrop-blur rounded-2xl text-[10px] font-black text-violet-600 border border-violet-50 uppercase tracking-widest shadow-sm">
             {project.badge}
           </span>

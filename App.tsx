@@ -6,6 +6,7 @@ import About from './components/About';
 import Projects from './components/Projects';
 import Skills from './components/Skills';
 import Tools from './components/Tools';
+import ToolsMarquee from './components/ToolsMarquee';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
 import AdminPanel from './components/AdminPanel';
@@ -179,6 +180,7 @@ const App: React.FC = () => {
         <div id="home">
           <Hero profile={data.profile} />
         </div>
+        <ToolsMarquee tools={data.tools} />
         {/* L'utilisation de scroll-mt-24 assure que le titre n'est pas caché sous le header */}
         <section id="about" className="py-20 bg-white scroll-mt-20">
           <About profile={data.profile} />
