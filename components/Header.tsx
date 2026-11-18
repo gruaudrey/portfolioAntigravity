@@ -78,9 +78,9 @@ const Header: React.FC<HeaderProps> = ({ profile, onAdminClick }) => {
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             className="flex items-center gap-3 hover:opacity-70 transition-all group"
           >
-            {/* Logo dans un cadre noir */}
-            <div className="w-12 h-12 shrink-0 rounded-xl border-[3px] border-neutral-950 bg-[#faf8fe] overflow-hidden flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
-              <img src="/logo-ag.png" alt="Logo Audrey Gruneisen" className="w-full h-full object-contain p-0.5" />
+            {/* Logo */}
+            <div className="w-12 h-12 shrink-0 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <img src="/logo-ag.png" alt="Logo Audrey Gruneisen" className="w-full h-full object-contain" />
             </div>
             <div className="flex flex-col text-left">
               <span className="text-lg font-extrabold text-slate-900 leading-none tracking-tight">{profile.name}</span>
