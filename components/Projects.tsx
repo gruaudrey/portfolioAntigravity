@@ -118,11 +118,6 @@ const ProjectCard: React.FC<{ project: Project }> = ({ project }) => {
             ))}
           </div>
         )}
-        <div className="absolute top-6 left-6 z-20">
-          <span className="px-4 py-1.5 bg-white/95 backdrop-blur rounded-2xl text-[10px] font-black text-violet-600 border border-violet-50 uppercase tracking-widest shadow-sm">
-            {project.badge}
-          </span>
-        </div>
         {allImages.length > 1 && (
           <div className="absolute bottom-4 right-4 bg-black/50 text-white text-[10px] font-bold px-3 py-1 rounded-full backdrop-blur">
             +{allImages.length - 1} photo{allImages.length > 2 ? 's' : ''}
@@ -131,6 +126,13 @@ const ProjectCard: React.FC<{ project: Project }> = ({ project }) => {
       </div>
 
       <div className="p-8 flex-1 flex flex-col">
+        {project.badge && (
+          <div className="mb-4">
+            <span className="inline-block px-3 py-1 bg-violet-50 rounded-full text-[10px] font-black text-violet-600 border border-violet-100 uppercase tracking-widest">
+              {project.badge}
+            </span>
+          </div>
+        )}
         <div className="flex justify-between items-start mb-4">
           <h3 className="text-2xl font-black text-slate-900 tracking-tight">{project.title}</h3>
           <span className="text-xs font-bold text-slate-400">{project.timeline}</span>
