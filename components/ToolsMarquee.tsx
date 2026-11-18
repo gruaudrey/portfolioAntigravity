@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Wrench } from 'lucide-react';
 import { Tool } from '../types';
 
@@ -51,6 +51,56 @@ const Frame: React.FC<{ tool: Tool; number: number; hidden?: boolean }> = ({ too
  * fixe si l'utilisateur demande de réduire les animations.
  */
 const ToolsMarquee: React.FC<ToolsMarqueeProps> = ({ tools }) => {
+  const wrapRef = useRef<HTMLDivElement>(null);
+
+  // Projecteur : le photogramme qui passe au centre de la pellicule prend ses couleurs
+  useEffect(() => {
+    const wrap = wrapRef.current;
+    if (!wrap) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const frames: HTMLElement[] = Array.from(wrap.querySelectorAll('.film-frame') as ArrayLike<HTMLElement>);
+    let current: HTMLElement | null = null;
+    let raf = 0;
+    let visible = true;
+
+    const tick = () => {
+      if (visible && !document.hidden) {
+        const w = wrap.getBoundingClientRect();
+        const cx = w.left + w.width / 2;
+        let best: HTMLElement | null = null;
+        let bestDist = Infinity;
+        for (const f of frames) {
+          const r = f.getBoundingClientRect();
+          if (r.right < w.left || r.left > w.right) continue;
+          const d = Math.abs(r.left + r.width / 2 - cx);
+          if (d < bestDist) {
+            bestDist = d;
+            best = f;
+          }
+        }
+        if (best !== current) {
+          current?.classList.remove('is-center');
+          best?.classList.add('is-center');
+          current = best;
+        }
+      }
+      raf = requestAnimationFrame(tick);
+    };
+
+    const obs = new IntersectionObserver(([e]) => {
+      visible = e.isIntersecting;
+    });
+    obs.observe(wrap);
+    raf = requestAnimationFrame(tick);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      obs.disconnect();
+      current?.classList.remove('is-center');
+    };
+  }, [tools.length]);
+
   if (!tools || tools.length === 0) return null;
 
   // Répéter la liste jusqu'à avoir assez de photogrammes, puis la doubler pour une boucle sans coupure
@@ -74,6 +124,9 @@ const ToolsMarquee: React.FC<ToolsMarqueeProps> = ({ tools }) => {
         .film-grain { animation: film-grain .6s steps(1) infinite; }
         .film-flicker { animation: film-flicker 1.4s steps(1) infinite; }
         .film-logo { filter: grayscale(1) contrast(1.15); mix-blend-mode: multiply; transition: filter .5s ease, transform .5s ease; }
+        .film-frame > span { transition: background-color .5s ease, box-shadow .5s ease; }
+        .film-frame.is-center > span { background-color: #fafaf9; box-shadow: 0 0 0 2px rgba(139,92,246,.55), 0 0 26px rgba(139,92,246,.35); }
+        .film-frame.is-center .film-logo { filter: grayscale(0) contrast(1); mix-blend-mode: normal; transform: scale(1.12); }
         .film-frame:hover .film-logo { filter: grayscale(0) contrast(1); mix-blend-mode: normal; transform: scale(1.08); }
         @media (prefers-reduced-motion: reduce) {
           .film-track { animation: none; width: auto; flex-wrap: wrap; justify-content: center; }
@@ -86,7 +139,7 @@ const ToolsMarquee: React.FC<ToolsMarqueeProps> = ({ tools }) => {
         ▶ Outils &amp; technologies
       </p>
 
-      <div className="film-wrap film-flicker relative overflow-hidden bg-neutral-950 shadow-2xl shadow-black/20">
+      <div ref={wrapRef} className="film-wrap film-flicker relative overflow-hidden bg-neutral-950 shadow-2xl shadow-black/20">
         <div className="film-track relative flex items-center py-6">
           {/* Perforations haut et bas : elles défilent avec la pellicule */}
           <div
