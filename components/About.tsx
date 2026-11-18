@@ -1,11 +1,44 @@
 
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Target, Cpu, Globe, Rocket, Terminal } from 'lucide-react';
-import { Profile } from '../types';
+import { Profile, Project, Skill, Tool } from '../types';
 
 interface AboutProps {
   profile: Profile;
+  projects?: Project[];
+  tools?: Tool[];
+  skills?: Skill[];
 }
+
+/** Compte de 0 jusqu'à la valeur quand l'élément devient visible (valeur fixe si animations réduites). */
+const CountUp: React.FC<{ value: number }> = ({ value }) => {
+  const reduce = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const [n, setN] = useState(reduce ? value : 0);
+  const ref = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    if (reduce || !ref.current) return;
+    let raf = 0;
+    const obs = new IntersectionObserver(([e]) => {
+      if (!e.isIntersecting) return;
+      obs.disconnect();
+      const start = performance.now();
+      const step = (t: number) => {
+        const p = Math.min((t - start) / 1600, 1);
+        setN(Math.round(value * (1 - Math.pow(1 - p, 3))));
+        if (p < 1) raf = requestAnimationFrame(step);
+      };
+      raf = requestAnimationFrame(step);
+    }, { threshold: 0.6 });
+    obs.observe(ref.current);
+    return () => {
+      obs.disconnect();
+      cancelAnimationFrame(raf);
+    };
+  }, [value, reduce]);
+
+  return <span ref={ref}>{n}</span>;
+};
 
 /**
  * Découpe un texte du type "Comprendre d'abord : ... Valider le plan : ..." en étapes.
@@ -22,15 +55,15 @@ const parseSteps = (text: string): { title: string; body: string }[] | null => {
   });
 };
 
-const About: React.FC<AboutProps> = ({ profile }) => {
+const About: React.FC<AboutProps> = ({ profile, projects = [], tools = [], skills = [] }) => {
   const cleanApproach = (profile.approach || '').replace(/^["«»“”\s]+|["«»“”\s]+$/g, '');
   const steps = parseSteps(cleanApproach);
 
   const iconMap: any = {
-    0: <Cpu className="text-violet-600" size={24} />,
-    1: <Target className="text-slate-500" size={24} />,
-    2: <Terminal className="text-slate-700" size={24} />,
-    3: <Globe className="text-violet-400" size={24} />
+    0: <Cpu className="text-violet-600" size={18} />,
+    1: <Target className="text-slate-500" size={18} />,
+    2: <Terminal className="text-slate-700" size={18} />,
+    3: <Globe className="text-violet-400" size={18} />
   };
 
   return (
@@ -80,18 +113,40 @@ const About: React.FC<AboutProps> = ({ profile }) => {
           </div>
         </div>
 
-        <div className="lg:col-span-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {profile.highlights.map((highlight, index) => (
-            <div 
-              key={index} 
-              className="p-6 bg-white border border-slate-100 rounded-3xl hover:shadow-xl hover:shadow-violet-500/5 hover:-translate-y-1 transition-all flex flex-col gap-4"
-            >
-              <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center shadow-inner">
-                {iconMap[index] || <Rocket className="text-violet-600" size={24} />}
+        <div className="lg:col-span-5 space-y-5">
+          {/* Chiffres clés : calculés à partir de vos données, ils se mettent à jour tout seuls */}
+          <div className="grid grid-cols-3 gap-3 sm:gap-4">
+            {[
+              { value: projects.length, label: 'Projets' },
+              { value: tools.length, label: 'Outils maîtrisés' },
+              { value: skills.length, label: 'Compétences' },
+            ].map((stat) => (
+              <div
+                key={stat.label}
+                className="p-4 sm:p-6 bg-white border border-slate-100 rounded-3xl text-center shadow-sm hover:shadow-xl hover:shadow-violet-500/10 hover:-translate-y-1 transition-all"
+              >
+                <div className="text-4xl sm:text-5xl font-black tracking-tighter bg-gradient-to-br from-violet-500 to-violet-800 bg-clip-text text-transparent leading-none">
+                  <CountUp value={stat.value} />
+                </div>
+                <div className="mt-3 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.15em] text-slate-400 leading-tight">
+                  {stat.label}
+                </div>
               </div>
-              <span className="font-extrabold text-slate-900 text-sm tracking-tight leading-snug">{highlight}</span>
-            </div>
-          ))}
+            ))}
+          </div>
+
+          {/* Domaines d'expertise : version compacte */}
+          <div className="flex flex-wrap gap-2.5">
+            {profile.highlights.map((highlight, index) => (
+              <span
+                key={index}
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-100 rounded-2xl text-sm font-extrabold text-slate-800 tracking-tight shadow-sm"
+              >
+                {iconMap[index] || <Rocket className="text-violet-600" size={18} />}
+                {highlight}
+              </span>
+            ))}
+          </div>
         </div>
       </div>
     </div>

@@ -183,7 +183,7 @@ const App: React.FC = () => {
         <ToolsMarquee tools={data.tools} />
         {/* L'utilisation de scroll-mt-24 assure que le titre n'est pas caché sous le header */}
         <section id="about" className="py-20 bg-white scroll-mt-20">
-          <About profile={data.profile} />
+          <About profile={data.profile} projects={data.projects} tools={data.tools} skills={data.skills} />
         </section>
         <section id="projects" className="py-20 bg-slate-50 scroll-mt-20">
           <Projects projects={data.projects} />
