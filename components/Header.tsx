@@ -10,6 +10,8 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ profile, onAdminClick }) => {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [progress, setProgress] = React.useState(0);
+  const [activeId, setActiveId] = React.useState<string>('');
 
   const navLinks = [
     { name: 'À propos', id: 'about' },
@@ -18,6 +20,37 @@ const Header: React.FC<HeaderProps> = ({ profile, onAdminClick }) => {
     { name: 'Outils', id: 'tools' },
     { name: 'Contact', id: 'contact' },
   ];
+
+  React.useEffect(() => {
+    const ids = navLinks.map((l) => l.id);
+    let ticking = false;
+    const update = () => {
+      ticking = false;
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      setProgress(max > 0 ? Math.min(window.scrollY / max, 1) : 0);
+      // Section active : la derniere dont le haut a passe 35 % de la hauteur de l'ecran
+      const line = window.innerHeight * 0.35;
+      let current = '';
+      for (const id of ids) {
+        const el = document.getElementById(id);
+        if (el && el.getBoundingClientRect().top <= line) current = id;
+      }
+      setActiveId(current);
+    };
+    const onScroll = () => {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(update);
+      }
+    };
+    update();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+    };
+  }, []);
 
   const scrollToSection = (id: string) => {
     setIsOpen(false);
@@ -60,7 +93,10 @@ const Header: React.FC<HeaderProps> = ({ profile, onAdminClick }) => {
               <button
                 key={link.id}
                 onClick={() => scrollToSection(link.id)}
-                className="px-5 py-2 text-slate-600 hover:text-violet-600 font-bold text-sm transition-all rounded-full hover:bg-violet-50/50"
+                aria-current={activeId === link.id ? 'true' : undefined}
+                className={`px-5 py-2 font-bold text-sm transition-all rounded-full hover:text-violet-600 hover:bg-violet-50/50 ${
+                  activeId === link.id ? 'text-violet-700 bg-violet-100/70' : 'text-slate-600'
+                }`}
               >
                 {link.name}
               </button>
@@ -87,6 +123,14 @@ const Header: React.FC<HeaderProps> = ({ profile, onAdminClick }) => {
         </div>
       </div>
 
+      {/* Barre de progression de lecture */}
+      <div className="absolute bottom-0 left-0 right-0 h-[3px] pointer-events-none" aria-hidden="true">
+        <div
+          className="h-full bg-gradient-to-r from-violet-400 to-violet-700 origin-left"
+          style={{ transform: `scaleX(${progress})` }}
+        ></div>
+      </div>
+
       {/* Mobile Navigation */}
       {isOpen && (
         <div className="md:hidden bg-white/95 backdrop-blur-xl border-b border-slate-200 animate-in slide-in-from-top duration-300">
@@ -95,7 +139,9 @@ const Header: React.FC<HeaderProps> = ({ profile, onAdminClick }) => {
               <button
                 key={link.id}
                 onClick={() => scrollToSection(link.id)}
-                className="block w-full px-3 py-4 text-base font-bold text-slate-600 hover:text-violet-600 hover:bg-violet-50 rounded-2xl"
+                className={`block w-full px-3 py-4 text-base font-bold hover:text-violet-600 hover:bg-violet-50 rounded-2xl ${
+                  activeId === link.id ? 'text-violet-700 bg-violet-50' : 'text-slate-600'
+                }`}
               >
                 {link.name}
               </button>

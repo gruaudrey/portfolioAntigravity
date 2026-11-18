@@ -24,7 +24,20 @@ const ProjectCard: React.FC<{ project: Project }> = ({ project }) => {
   const nextImage = () => setLightboxIndex((i: number | null) => (i !== null ? (i + 1) % allImages.length : 0));
 
   return (
-    <div className="bg-white rounded-[2.5rem] overflow-hidden border border-slate-100 hover:shadow-2xl hover:shadow-violet-500/5 transition-all duration-500 group flex flex-col">
+    <div
+      className="relative bg-white rounded-[2.5rem] overflow-hidden border border-slate-100 hover:border-violet-200 hover:-translate-y-2 hover:shadow-2xl hover:shadow-violet-500/20 transition-all duration-500 group flex flex-col"
+      onMouseMove={(e) => {
+        const r = e.currentTarget.getBoundingClientRect();
+        e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`);
+        e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`);
+      }}
+    >
+      {/* Halo lumineux qui suit le curseur */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+        style={{ background: 'radial-gradient(420px circle at var(--mx, 50%) var(--my, 50%), rgba(139,92,246,0.16), transparent 60%)' }}
+      ></div>
       {/* Image de couverture */}
       <div className="relative h-64 overflow-hidden cursor-pointer" onClick={() => openLightbox(0)}>
         <img

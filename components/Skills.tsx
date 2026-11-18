@@ -27,19 +27,19 @@ const SkillBadge: React.FC<{ skill: Skill }> = ({ skill }) => {
   };
 
   return (
-    <div className="group relative bg-white border-2 border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-xl hover:scale-105 hover:border-violet-300 transition-all duration-300 overflow-hidden">
+    <div className="group relative bg-white border-2 border-slate-200 rounded-2xl p-3 sm:p-5 shadow-sm hover:shadow-xl hover:scale-105 hover:border-violet-300 transition-all duration-300 overflow-hidden">
       {/* Gradient Background on Hover */}
       <div className={`absolute inset-0 bg-gradient-to-br ${getLevelColor(skill.level)} opacity-0 group-hover:opacity-5 transition-opacity duration-300`}></div>
 
-      <div className="relative z-10 flex justify-between items-center">
-        <span className="font-bold text-slate-800 group-hover:text-violet-700 transition-colors text-lg">
+      <div className="relative z-10 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 sm:gap-0 h-full">
+        <span className="font-bold text-slate-800 group-hover:text-violet-700 transition-colors text-sm sm:text-lg leading-tight break-words">
           {skill.name}
         </span>
-        <div className="flex flex-col items-end gap-2">
-          <span className="text-[10px] uppercase tracking-wider font-black text-slate-400 bg-slate-100 px-3 py-1 rounded-full">
+        <div className="flex flex-col items-start sm:items-end gap-1.5 sm:gap-2 mt-auto">
+          <span className="text-[10px] uppercase tracking-wider font-black text-slate-400 bg-slate-100 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full">
             {skill.level}
           </span>
-          <div className="w-20 h-2 bg-slate-100 rounded-full overflow-hidden shadow-inner">
+          <div className="w-full sm:w-20 h-2 bg-slate-100 rounded-full overflow-hidden shadow-inner">
             <div
               className={`h-full bg-gradient-to-r ${getLevelColor(skill.level)} transition-all duration-500 shadow-md`}
               style={{ width: getLevelWidth(skill.level) }}
@@ -117,7 +117,7 @@ const Skills: React.FC<SkillsProps> = ({ skills }) => {
               </div>
 
               {/* Skills Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
                 {categorySkills.map((skill) => (
                   <SkillBadge key={skill.id} skill={skill} />
                 ))}
