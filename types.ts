@@ -69,11 +69,23 @@ export interface Tool {
   description?: string;
 }
 
+export interface Assistant {
+  id: string;
+  name: string;
+  badge?: string;
+  problem?: string;
+  description?: string;
+  result?: string;
+  tools?: string; // outils séparés par des virgules
+  imageUrl?: string;
+}
+
 export interface PortfolioData {
   profile: Profile;
   projects: Project[];
   skills: Skill[];
   tools: Tool[];
+  assistants?: Assistant[];
 }
 
 export interface ContactMessage {

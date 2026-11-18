@@ -6,9 +6,10 @@ import { Profile } from '../types';
 interface HeaderProps {
   profile: Profile;
   onAdminClick: () => void;
+  showAssistants?: boolean;
 }
 
-const Header: React.FC<HeaderProps> = ({ profile, onAdminClick }) => {
+const Header: React.FC<HeaderProps> = ({ profile, onAdminClick, showAssistants }) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const [progress, setProgress] = React.useState(0);
   const [activeId, setActiveId] = React.useState<string>('');
@@ -16,6 +17,7 @@ const Header: React.FC<HeaderProps> = ({ profile, onAdminClick }) => {
   const navLinks = [
     { name: 'À propos', id: 'about' },
     { name: 'Projets', id: 'projects' },
+    ...(showAssistants ? [{ name: 'Assistants', id: 'assistants' }] : []),
     { name: 'Compétences', id: 'skills' },
     { name: 'Outils', id: 'tools' },
     { name: 'Contact', id: 'contact' },

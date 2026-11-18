@@ -7,6 +7,7 @@ import Projects from './components/Projects';
 import Skills from './components/Skills';
 import Tools from './components/Tools';
 import ToolsMarquee from './components/ToolsMarquee';
+import Assistants from './components/Assistants';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
 import AdminPanel from './components/AdminPanel';
@@ -172,9 +173,12 @@ const App: React.FC = () => {
     );
   }
 
+  const assistants = data.assistants || [];
+  const hasAssistants = assistants.length > 0;
+
   return (
     <div className="min-h-screen relative">
-      <Header profile={data.profile} onAdminClick={handleAdminClick} />
+      <Header profile={data.profile} onAdminClick={handleAdminClick} showAssistants={hasAssistants} />
 
       <main>
         <div id="home">
@@ -188,10 +192,15 @@ const App: React.FC = () => {
         <section id="projects" className="py-20 bg-slate-50 scroll-mt-20">
           <Projects projects={data.projects} />
         </section>
-        <section id="skills" className="py-20 bg-white scroll-mt-20">
+        {hasAssistants && (
+          <section id="assistants" className="py-20 bg-white scroll-mt-20">
+            <Assistants assistants={assistants} />
+          </section>
+        )}
+        <section id="skills" className={`py-20 ${hasAssistants ? 'bg-slate-50' : 'bg-white'} scroll-mt-20`}>
           <Skills skills={data.skills} />
         </section>
-        <section id="tools" className="py-20 bg-slate-50 scroll-mt-20">
+        <section id="tools" className={`py-20 ${hasAssistants ? 'bg-white' : 'bg-slate-50'} scroll-mt-20`}>
           <Tools tools={data.tools} />
         </section>
         <section id="contact" className="py-20 bg-slate-50 scroll-mt-20">

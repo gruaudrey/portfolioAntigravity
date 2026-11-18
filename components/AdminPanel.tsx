@@ -3,9 +3,9 @@ import React, { useState, useRef } from 'react';
 import {
   LogOut, Plus, Trash2, Mail, User, Briefcase, CheckCircle, Sparkles,
   Info, Database, Image as ImageIcon, Cpu, CloudUpload, Upload,
-  Linkedin, Github, Globe, Download, BookOpen, Wrench
+  Linkedin, Github, Globe, Download, BookOpen, Wrench, Bot
 } from 'lucide-react';
-import { PortfolioData, Profile, Project, Skill, SkillLevel, SkillCategory, ContactMessage, Tool, ToolCategory } from '../types';
+import { PortfolioData, Profile, Project, Skill, SkillLevel, SkillCategory, ContactMessage, Tool, ToolCategory, Assistant } from '../types';
 
 interface AdminPanelProps {
   data: PortfolioData;
@@ -15,7 +15,7 @@ interface AdminPanelProps {
 }
 
 const AdminPanel: React.FC<AdminPanelProps> = ({ data, setData, messages, onExit }) => {
-  const [activeTab, setActiveTab] = useState<'projects' | 'skills' | 'tools' | 'profile' | 'about' | 'messages' | 'guide'>('projects');
+  const [activeTab, setActiveTab] = useState<'projects' | 'assistants' | 'skills' | 'tools' | 'profile' | 'about' | 'messages' | 'guide'>('projects');
   const [isSaving, setIsSaving] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
@@ -169,6 +169,80 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ data, setData, messages, onExit
     }
   };
 
+  // --- LOGIQUE ASSISTANTS ---
+  const assistants: Assistant[] = data.assistants || [];
+
+  const addAssistant = () => {
+    const newAssistant: Assistant = {
+      id: Date.now().toString(),
+      name: 'Nouvel assistant',
+      badge: 'Assistant Claude',
+      problem: '',
+      description: '',
+      result: '',
+      tools: 'Claude',
+      imageUrl: ''
+    };
+    syncData({ ...data, assistants: [...assistants, newAssistant] });
+  };
+
+  const prefillAssistants = () => {
+    const base = Date.now();
+    const examples: Assistant[] = [
+      {
+        id: String(base),
+        name: 'iriA : conception de formation industrielle',
+        badge: 'Assistant Claude',
+        problem: 'Concevoir une formation pour les métiers industriels demande du temps et une méthode rigoureuse.',
+        description: 'Trois assistants accompagnent le formateur, de la préparation du projet jusqu’à un scénario pédagogique détaillé (méthode AFR : Ancrage, Formalisation, Réancrage).',
+        result: '',
+        tools: 'Claude, Méthode AFR',
+        imageUrl: ''
+      },
+      {
+        id: String(base + 1),
+        name: 'Prospection industrielle',
+        badge: 'Assistant Claude',
+        problem: 'Arriver à un rendez-vous commercial sans bien connaître l’entreprise.',
+        description: 'Produit une analyse complète à partir d’un nom ou d’un SIRET (données légales, site, LinkedIn, offres d’emploi, presse). Règle stricte : aucune supposition, chaque information est sourcée.',
+        result: '',
+        tools: 'Claude, Recherche web',
+        imageUrl: ''
+      },
+      {
+        id: String(base + 2),
+        name: 'Lancement client TPE',
+        badge: 'Assistant Claude',
+        problem: 'Passer de la fiche de cadrage d’un client à des automatisations concrètes.',
+        description: 'Réalise une synthèse visuelle, liste les questions manquantes, conçoit des workflows n8n sur mesure et prépare la livraison avec un mode d’emploi.',
+        result: '',
+        tools: 'Claude, n8n',
+        imageUrl: ''
+      }
+    ];
+    syncData({ ...data, assistants: [...assistants, ...examples] });
+  };
+
+  const updateAssistantField = (id: string, field: keyof Assistant, value: string) => {
+    const updated = assistants.map(a => a.id === id ? { ...a, [field]: value } : a);
+    syncData({ ...data, assistants: updated });
+  };
+
+  const moveAssistant = (id: string, direction: -1 | 1) => {
+    const index = assistants.findIndex(a => a.id === id);
+    const target = index + direction;
+    if (index < 0 || target < 0 || target >= assistants.length) return;
+    const copy = [...assistants];
+    [copy[index], copy[target]] = [copy[target], copy[index]];
+    syncData({ ...data, assistants: copy });
+  };
+
+  const deleteAssistant = (id: string) => {
+    if (confirm("Confirmer la suppression de cet assistant ?")) {
+      syncData({ ...data, assistants: assistants.filter(a => a.id !== id) });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col font-sans text-slate-900">
       <header className="bg-white border-b border-slate-200 px-8 py-4 flex justify-between items-center sticky top-0 z-50">
@@ -213,6 +287,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ data, setData, messages, onExit
         <nav className="w-80 bg-white border-r border-slate-200 p-8 flex flex-col gap-2">
           {[
             { id: 'projects', label: 'Mes Projets', icon: <Briefcase size={20} />, count: data.projects.length },
+            { id: 'assistants', label: 'Assistants IA', icon: <Bot size={20} />, count: assistants.length },
             { id: 'skills', label: 'Compétences', icon: <Cpu size={20} />, count: data.skills.length },
             { id: 'tools', label: 'Outils', icon: <Wrench size={20} />, count: data.tools.length },
             { id: 'profile', label: 'Hero & Identité', icon: <User size={20} /> },
@@ -354,6 +429,114 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ data, setData, messages, onExit
                         <div className="space-y-3">
                           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-green-600">Impact & ROI</label>
                           <input type="text" value={project.impact} onChange={e => updateProjectField(project.id, 'impact', e.target.value)} className="w-full border-2 border-green-100 bg-green-50/10 rounded-xl p-5 font-black text-lg text-green-900 outline-none" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'assistants' && (
+            <div className="max-w-5xl mx-auto space-y-12 animate-in fade-in duration-500">
+              <div className="flex justify-between items-end border-b border-slate-200 pb-8 gap-4 flex-wrap">
+                <div>
+                  <h2 className="text-4xl font-black tracking-tighter flex items-center gap-3">
+                    <Bot className="text-blue-600" size={40} />
+                    Assistants IA
+                  </h2>
+                  <p className="text-slate-400 font-bold mt-2 uppercase tracking-widest text-xs">Les champs laissés vides ne sont pas affichés sur le site</p>
+                </div>
+                <div className="flex gap-3 flex-wrap">
+                  {assistants.length === 0 && (
+                    <button onClick={prefillAssistants} className="bg-white border-2 border-blue-600 text-blue-600 px-6 py-4 rounded-2xl font-black flex items-center gap-3 hover:bg-blue-50 transition-all">
+                      <Sparkles size={20} /> PRÉ-REMPLIR MES 3 ASSISTANTS
+                    </button>
+                  )}
+                  <button onClick={addAssistant} className="bg-gradient-to-r from-blue-600 to-violet-600 text-white px-8 py-4 rounded-2xl font-black flex items-center gap-3 shadow-xl hover:scale-105 transition-all">
+                    <Plus size={20} /> NOUVEL ASSISTANT
+                  </button>
+                </div>
+              </div>
+
+              {assistants.length === 0 && (
+                <div className="py-24 text-center bg-white rounded-[3rem] border-2 border-dashed border-slate-200 text-slate-400 font-black uppercase tracking-widest text-sm">
+                  Aucun assistant : la section n'apparaît pas sur le site
+                </div>
+              )}
+
+              <div className="grid gap-8">
+                {assistants.map((a, index) => (
+                  <div key={a.id} className="bg-white p-8 rounded-[2.5rem] border-2 border-slate-200 shadow-sm hover:shadow-xl transition-all relative">
+                    <div className="absolute top-6 right-6 flex items-center gap-1">
+                      <button onClick={() => moveAssistant(a.id, -1)} disabled={index === 0} title="Monter" className="px-3 py-2 text-slate-300 hover:text-blue-600 disabled:opacity-30 font-black rounded-xl hover:bg-blue-50 transition-all">↑</button>
+                      <button onClick={() => moveAssistant(a.id, 1)} disabled={index === assistants.length - 1} title="Descendre" className="px-3 py-2 text-slate-300 hover:text-blue-600 disabled:opacity-30 font-black rounded-xl hover:bg-blue-50 transition-all">↓</button>
+                      <button onClick={() => deleteAssistant(a.id)} className="p-3 text-red-200 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all">
+                        <Trash2 size={20} />
+                      </button>
+                    </div>
+
+                    <div className="grid md:grid-cols-12 gap-8">
+                      <div className="md:col-span-3 space-y-3">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Capture d'écran (facultatif)</label>
+                        <div className="aspect-video rounded-2xl overflow-hidden bg-slate-50 border-4 border-slate-100 shadow-inner relative group/shot">
+                          {a.imageUrl ? (
+                            <img src={a.imageUrl} className="w-full h-full object-cover" alt={a.name} />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <ImageIcon className="text-slate-300" size={36} />
+                            </div>
+                          )}
+                          <label className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center opacity-0 group-hover/shot:opacity-100 transition-opacity cursor-pointer text-white font-bold text-xs">
+                            <Upload size={22} className="mb-2" />
+                            {a.imageUrl ? "CHANGER L'IMAGE" : 'AJOUTER UNE IMAGE'}
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                if (e.target.files?.[0]) {
+                                  handleImageUpload(e.target.files[0], (b64) => updateAssistantField(a.id, 'imageUrl', b64));
+                                }
+                              }}
+                            />
+                          </label>
+                        </div>
+                        {a.imageUrl && (
+                          <button onClick={() => updateAssistantField(a.id, 'imageUrl', '')} className="w-full text-xs text-red-500 hover:text-red-700 font-bold py-1">
+                            Supprimer l'image
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="md:col-span-9 space-y-5 pr-0 md:pr-24">
+                        <div className="grid md:grid-cols-2 gap-5">
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nom de l'assistant</label>
+                            <input type="text" value={a.name} onChange={e => updateAssistantField(a.id, 'name', e.target.value)} className="w-full border-2 border-slate-200 bg-white rounded-xl px-5 py-3 font-black text-lg focus:border-blue-500 outline-none transition-all" placeholder="Ex: Prospection industrielle" />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Badge</label>
+                            <input type="text" value={a.badge || ''} onChange={e => updateAssistantField(a.id, 'badge', e.target.value)} className="w-full border-2 border-slate-200 bg-white rounded-xl px-5 py-3 font-bold text-blue-600 focus:border-blue-500 outline-none transition-all" placeholder="Ex: Assistant Claude" />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Le problème</label>
+                          <textarea rows={2} value={a.problem || ''} onChange={e => updateAssistantField(a.id, 'problem', e.target.value)} className="w-full border-2 border-slate-200 bg-white rounded-xl px-5 py-3 text-sm focus:border-blue-500 outline-none transition-all resize-y" placeholder="Quel problème métier cet assistant résout-il ?" />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ce qu'il fait</label>
+                          <textarea rows={3} value={a.description || ''} onChange={e => updateAssistantField(a.id, 'description', e.target.value)} className="w-full border-2 border-slate-200 bg-white rounded-xl px-5 py-3 text-sm focus:border-blue-500 outline-none transition-all resize-y" placeholder="En une ou deux phrases, ce que fait l'assistant." />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Résultat (chiffré si possible)</label>
+                          <textarea rows={2} value={a.result || ''} onChange={e => updateAssistantField(a.id, 'result', e.target.value)} className="w-full border-2 border-slate-200 bg-white rounded-xl px-5 py-3 text-sm font-bold focus:border-blue-500 outline-none transition-all resize-y" placeholder="Ex: Analyse prête en 10 minutes au lieu de 2 heures" />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Outils (séparés par des virgules)</label>
+                          <input type="text" value={a.tools || ''} onChange={e => updateAssistantField(a.id, 'tools', e.target.value)} className="w-full border-2 border-slate-200 bg-white rounded-xl px-5 py-3 text-sm focus:border-blue-500 outline-none transition-all" placeholder="Ex: Claude, n8n, Supabase" />
                         </div>
                       </div>
                     </div>
