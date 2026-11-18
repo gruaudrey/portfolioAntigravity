@@ -106,14 +106,31 @@ const Hero: React.FC<HeroProps> = ({ profile }) => {
   };
 
   return (
+    <div className="bg-mesh pt-24 px-2 sm:px-4 lg:px-6 pb-2 sm:pb-4">
+      {/* Cadre noir en dégradé léger autour de l'accueil */}
+      <div
+        className="rounded-[1.5rem] md:rounded-[2rem] p-[2px] md:p-[3px]"
+        style={{
+          background: 'linear-gradient(135deg, #5a5a64 0%, #b9b2d3 50%, #6b6b75 100%)',
+          // Relief : ombre portée en deux couches + liseré de lumière en haut, ombre fine en bas
+          boxShadow:
+            '0 18px 40px -20px rgba(40, 25, 80, 0.22), 0 4px 10px -6px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.4)',
+        }}
+      >
     <section
-      className="relative pt-44 pb-28 overflow-hidden bg-mesh"
+      className="relative pt-14 md:pt-20 pb-20 md:pb-24 overflow-hidden bg-mesh rounded-[1.35rem] md:rounded-[1.8rem]"
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
     >
       {/* Background Motifs */}
       <div className="absolute inset-0 bg-neural-grid opacity-[0.5] pointer-events-none"></div>
       <NeuralBackground />
+      {/* Ombre intérieure : effet d'écran enfoncé dans le cadre */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 z-20 rounded-[1.35rem] md:rounded-[1.8rem]"
+        style={{ boxShadow: 'inset 0 3px 12px rgba(30, 15, 70, 0.08), inset 0 0 0 1px rgba(0, 0, 0, 0.08)' }}
+      ></div>
       <style>{`
         @keyframes hero-letter-in { from { opacity: 0; transform: translateY(0.4em) scale(0.95); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
         @keyframes hero-rotate-in { from { opacity: 0; transform: translateY(0.5em); } to { opacity: 1; transform: none; } }
@@ -210,6 +227,8 @@ const Hero: React.FC<HeroProps> = ({ profile }) => {
         </div>
       </div>
     </section>
+      </div>
+    </div>
   );
 };
 

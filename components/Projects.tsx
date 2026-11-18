@@ -63,13 +63,16 @@ const ProjectCard: React.FC<{ project: Project }> = ({ project }) => {
 
   return (
     <div
-      className="relative bg-white rounded-[2.5rem] overflow-hidden border border-slate-100 hover:border-violet-200 hover:-translate-y-2 hover:shadow-2xl hover:shadow-violet-500/20 transition-all duration-500 group flex flex-col"
+      // Cadre fin en dégradé noir léger + ombre et relief discrets (ombre plus marquée au survol)
+      className="relative rounded-[2.5rem] p-[2px] hover:-translate-y-2 transition-all duration-500 group flex flex-col shadow-[0_14px_28px_-14px_rgba(40,25,80,0.3),0_4px_8px_-4px_rgba(0,0,0,0.18),inset_0_1px_0_rgba(255,255,255,0.25)] hover:shadow-[0_28px_48px_-16px_rgba(80,40,160,0.42),0_8px_14px_-6px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.3)]"
+      style={{ background: 'linear-gradient(135deg, #25252a 0%, #8a84a6 50%, #34343b 100%)' }}
       onMouseMove={(e) => {
         const r = e.currentTarget.getBoundingClientRect();
         e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`);
         e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`);
       }}
     >
+      <div className="relative flex-1 flex flex-col bg-white rounded-[calc(2.5rem-2px)] overflow-hidden">
       {/* Halo lumineux qui suit le curseur */}
       <div
         aria-hidden="true"
@@ -251,6 +254,7 @@ const ProjectCard: React.FC<{ project: Project }> = ({ project }) => {
           )}
         </div>
       )}
+      </div>
     </div>
   );
 };
