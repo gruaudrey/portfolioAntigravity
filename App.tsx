@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import About from './components/About';
@@ -88,15 +88,22 @@ const App: React.FC = () => {
     }
   }, [data, isLoading]);
 
-  const handleUpdateData = async (newData: PortfolioData) => {
-    setData(newData);
+  // Sauvegarde différée : on attend 1,5 s sans nouvelle modification avant d'envoyer,
+  // pour ne pas renvoyer plusieurs Mo à chaque lettre tapée.
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingData = useRef<PortfolioData | null>(null);
 
-    // Sauvegarder dans Supabase
+  const flushSave = async () => {
+    if (saveTimer.current) {
+      clearTimeout(saveTimer.current);
+      saveTimer.current = null;
+    }
+    const toSave = pendingData.current;
+    if (!toSave) return;
+    pendingData.current = null;
     try {
-      const success = await savePortfolioData(newData);
-      if (success) {
-        console.log('Données sauvegardées dans Supabase');
-      } else {
+      const success = await savePortfolioData(toSave);
+      if (!success) {
         console.error('Erreur lors de la sauvegarde dans Supabase');
         alert("La sauvegarde a échoué : vos modifications ne sont pas enregistrées en ligne. Reconnectez-vous puis réessayez.");
       }
@@ -104,6 +111,13 @@ const App: React.FC = () => {
       console.error('Erreur lors de la sauvegarde:', error);
       alert("La sauvegarde a échoué : vos modifications ne sont pas enregistrées en ligne. Reconnectez-vous puis réessayez.");
     }
+  };
+
+  const handleUpdateData = (newData: PortfolioData) => {
+    setData(newData);
+    pendingData.current = newData;
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(flushSave, 1500);
   };
 
   const handleAddMessage = async (msg: Omit<ContactMessage, 'id' | 'date'>) => {
@@ -139,6 +153,7 @@ const App: React.FC = () => {
   };
 
   const handleExitAdmin = async () => {
+    await flushSave(); // envoyer les dernières modifications avant de se déconnecter
     setIsAdminMode(false);
     setIsAuth(false);
     setMessages([]);

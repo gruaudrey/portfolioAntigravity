@@ -32,10 +32,18 @@ export async function getPortfolioData(): Promise<PortfolioData | null> {
 /**
  * Sauvegarde les données du portfolio dans Supabase
  */
-export async function savePortfolioData(data: PortfolioData): Promise<boolean> {
+// Les sauvegardes sont mises en file : le portfolio pese plusieurs Mo (images en base64),
+// et plusieurs envois simultanes depassent le delai maximum de Supabase (statement timeout).
+let saveQueue: Promise<unknown> = Promise.resolve();
+
+export function savePortfolioData(data: PortfolioData): Promise<boolean> {
+    const run = saveQueue.then(() => saveNow(data));
+    saveQueue = run.catch(() => undefined);
+    return run;
+}
+
+async function saveNow(data: PortfolioData): Promise<boolean> {
     try {
-        // Log pour débugger
-        console.log('📤 Données envoyées à Supabase:', JSON.stringify(data, null, 2));
 
         const { error } = await supabase
             .from('portfolio_data')
