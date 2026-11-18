@@ -30,7 +30,7 @@ CREATE INDEX IF NOT EXISTS idx_messages_created ON contact_messages(created_at D
 -- 3. Table pour la configuration admin (optionnel)
 CREATE TABLE IF NOT EXISTS admin_config (
   id INTEGER PRIMARY KEY DEFAULT 1,
-  password_hash TEXT NOT NULL DEFAULT 'admin123',
+  password_hash TEXT NOT NULL DEFAULT '',
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   CONSTRAINT single_row CHECK (id = 1)
 );
@@ -81,10 +81,8 @@ CREATE POLICY "Admin config - admin uniquement"
 -- DONNÉES INITIALES (optionnel)
 -- ==========================================
 
--- Insérer une configuration admin par défaut
-INSERT INTO admin_config (id, password_hash)
-VALUES (1, 'admin123')
-ON CONFLICT (id) DO NOTHING;
+-- (Ancienne config admin supprimée : la connexion passe désormais par Supabase Auth.
+--  Après ce script, exécutez supabase-auth-setup.sql pour sécuriser les accès.)
 
 -- ==========================================
 -- FONCTIONS UTILITAIRES

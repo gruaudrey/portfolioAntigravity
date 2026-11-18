@@ -11,7 +11,7 @@ Ce guide vous explique comment **modifier et sauvegarder** vos informations de p
 ### Étape 1️⃣ : Modifier vos informations dans le Mode Admin
 
 1. Connectez-vous au **Mode Admin** (bouton cadenas en haut à droite)
-2. Mot de passe : `admin123`
+2. Connectez-vous avec votre e-mail et votre mot de passe Supabase Auth
 3. Modifiez vos projets, compétences, profil, etc.
 4. Les modifications sont **automatiquement sauvegardées** dans votre navigateur
 

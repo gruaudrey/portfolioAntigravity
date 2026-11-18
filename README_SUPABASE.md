@@ -61,7 +61,7 @@ npm run dev
 
 - URL : `http://localhost:5173`
 - Cliquez sur l'icône de verrouillage en haut à droite
-- Mot de passe par défaut : `admin123`
+- Connexion : e-mail + mot de passe de votre utilisateur Supabase Auth (voir supabase-auth-setup.sql)
 
 ### Modification des données
 
@@ -115,7 +115,7 @@ Si vous avez déjà des données dans le localStorage :
 
 **Erreur d'authentification**
 - Vérifiez le mot de passe dans la table `admin_config`
-- Par défaut : `admin123`
+- Géré par Supabase Auth (Authentication > Users)
 
 ## Support
 

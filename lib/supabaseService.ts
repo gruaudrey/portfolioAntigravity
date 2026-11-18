@@ -75,7 +75,13 @@ export async function getContactMessages(): Promise<ContactMessage[]> {
             return [];
         }
 
-        return data || [];
+        return (data || []).map((row: any) => ({
+            id: String(row.id),
+            name: row.name,
+            email: row.email,
+            message: row.message,
+            date: new Date(row.created_at).toLocaleString()
+        }));
     } catch (error) {
         console.error('Erreur inattendue:', error);
         return [];
@@ -87,31 +93,29 @@ export async function getContactMessages(): Promise<ContactMessage[]> {
  */
 export async function addContactMessage(message: Omit<ContactMessage, 'id' | 'date'>): Promise<ContactMessage | null> {
     try {
-        const newMessage = {
-            name: message.name,
-            email: message.email,
-            message: message.message,
-            created_at: new Date().toISOString()
-        };
+        const createdAt = new Date();
 
-        const { data, error } = await supabase
+        // Pas de .select() : seul l'administratrice a le droit de relire les messages.
+        const { error } = await supabase
             .from('contact_messages')
-            .insert(newMessage)
-            .select()
-            .single();
+            .insert({
+                name: message.name,
+                email: message.email,
+                message: message.message,
+                created_at: createdAt.toISOString()
+            });
 
         if (error) {
             console.error('Erreur lors de l\'ajout du message:', error);
             return null;
         }
 
-        // Convertir le format Supabase vers notre format ContactMessage
         return {
-            id: data.id.toString(),
-            name: data.name,
-            email: data.email,
-            message: data.message,
-            date: new Date(data.created_at).toLocaleString()
+            id: `local-${createdAt.getTime()}`,
+            name: message.name,
+            email: message.email,
+            message: message.message,
+            date: createdAt.toLocaleString()
         };
     } catch (error) {
         console.error('Erreur inattendue:', error);
@@ -122,26 +126,27 @@ export async function addContactMessage(message: Omit<ContactMessage, 'id' | 'da
 // ==================== AUTHENTIFICATION ====================
 
 /**
- * Vérifie le mot de passe admin
- * Note: Pour plus de sécurité, vous devriez utiliser l'authentification Supabase
+ * Connexion administratrice via Supabase Auth (e-mail + mot de passe).
+ * Le mot de passe n'est stocke nulle part dans le code : il est verifie par Supabase.
  */
-export async function verifyAdminPassword(password: string): Promise<boolean> {
+export async function signInAdmin(email: string, password: string): Promise<boolean> {
     try {
-        const { data, error } = await supabase
-            .from('admin_config')
-            .select('password_hash')
-            .single();
-
+        const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
         if (error) {
-            console.error('Erreur lors de la vérification:', error);
-            // Fallback sur le mot de passe en dur pour la compatibilité
-            return password === 'admin123';
+            console.error('Connexion refusee:', error.message);
+            return false;
         }
-
-        // Pour l'instant, on compare directement (à améliorer avec bcrypt côté serveur)
-        return data?.password_hash === password;
+        return true;
     } catch (error) {
         console.error('Erreur inattendue:', error);
-        return password === 'admin123';
+        return false;
+    }
+}
+
+export async function signOutAdmin(): Promise<void> {
+    try {
+        await supabase.auth.signOut();
+    } catch (error) {
+        console.error('Erreur lors de la deconnexion:', error);
     }
 }

@@ -39,7 +39,7 @@
 2. Ouvrez l'application dans votre navigateur
 
 3. Testez les fonctionnalités :
-   - Connexion au panneau admin (mot de passe : `admin123`)
+   - Connexion au panneau admin (e-mail + mot de passe Supabase Auth)
    - Modification des données
    - Ajout d'un message de contact
 

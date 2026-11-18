@@ -12,18 +12,37 @@ import AdminPanel from './components/AdminPanel';
 import { PortfolioData, ContactMessage } from './types';
 import { INITIAL_PROFILE, INITIAL_PROJECTS, INITIAL_SKILLS } from './constants';
 import { Lock, X } from 'lucide-react';
-import { getPortfolioData, savePortfolioData, getContactMessages, addContactMessage, verifyAdminPassword } from './lib/supabaseService';
+import { getPortfolioData, savePortfolioData, getContactMessages, addContactMessage, signInAdmin, signOutAdmin } from './lib/supabaseService';
+
+// Le cache local est un simple confort : s'il est plein (images en base64 trop lourdes)
+// ou illisible, on l'ignore au lieu de faire planter tout le site.
+const readCache = (): PortfolioData | null => {
+  try {
+    const saved = localStorage.getItem('portfolio_data');
+    if (!saved) return null;
+    const parsed = JSON.parse(saved);
+    return { ...parsed, tools: parsed.tools || [] };
+  } catch {
+    return null;
+  }
+};
+
+const writeCache = (value: PortfolioData) => {
+  try {
+    localStorage.setItem('portfolio_data', JSON.stringify(value));
+  } catch {
+    try {
+      localStorage.removeItem('portfolio_data');
+    } catch {
+      /* rien à faire */
+    }
+  }
+};
 
 const App: React.FC = () => {
   const [data, setData] = useState<PortfolioData>(() => {
-    const saved = localStorage.getItem('portfolio_data');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      return {
-        ...parsed,
-        tools: parsed.tools || []
-      };
-    }
+    const cached = readCache();
+    if (cached) return cached;
     return {
       profile: INITIAL_PROFILE,
       projects: INITIAL_PROJECTS,
@@ -37,6 +56,7 @@ const App: React.FC = () => {
   const [isAdminMode, setIsAdminMode] = useState(false);
   const [isAuth, setIsAuth] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState(false);
 
@@ -49,12 +69,8 @@ const App: React.FC = () => {
         if (portfolioData) {
           setData(portfolioData);
           // Sauvegarder aussi dans localStorage pour le cache
-          localStorage.setItem('portfolio_data', JSON.stringify(portfolioData));
+          writeCache(portfolioData);
         }
-
-        // Charger les messages
-        const contactMessages = await getContactMessages();
-        setMessages(contactMessages);
       } catch (error) {
         console.error('Erreur lors du chargement des données:', error);
       } finally {
@@ -68,7 +84,7 @@ const App: React.FC = () => {
   // Sauvegarder dans localStorage quand les données changent (cache local)
   useEffect(() => {
     if (!isLoading) {
-      localStorage.setItem('portfolio_data', JSON.stringify(data));
+      writeCache(data);
     }
   }, [data, isLoading]);
 
@@ -82,9 +98,11 @@ const App: React.FC = () => {
         console.log('Données sauvegardées dans Supabase');
       } else {
         console.error('Erreur lors de la sauvegarde dans Supabase');
+        alert("La sauvegarde a échoué : vos modifications ne sont pas enregistrées en ligne. Reconnectez-vous puis réessayez.");
       }
     } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error);
+      alert("La sauvegarde a échoué : vos modifications ne sont pas enregistrées en ligne. Reconnectez-vous puis réessayez.");
     }
   };
 
@@ -105,17 +123,26 @@ const App: React.FC = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const isValid = await verifyAdminPassword(password);
+    const isValid = await signInAdmin(email, password);
     if (isValid) {
       setIsAuth(true);
       setIsAdminMode(true);
       setShowLoginModal(false);
       setPassword('');
       setLoginError(false);
+      // Les messages ne sont lisibles que une fois connectée
+      setMessages(await getContactMessages());
     } else {
       setLoginError(true);
       setPassword('');
     }
+  };
+
+  const handleExitAdmin = async () => {
+    setIsAdminMode(false);
+    setIsAuth(false);
+    setMessages([]);
+    await signOutAdmin();
   };
 
   if (isAdminMode && isAuth) {
@@ -124,7 +151,7 @@ const App: React.FC = () => {
         data={data}
         setData={handleUpdateData}
         messages={messages}
-        onExit={() => setIsAdminMode(false)}
+        onExit={handleExitAdmin}
       />
     );
   }
@@ -173,14 +200,24 @@ const App: React.FC = () => {
                 <Lock size={32} />
               </div>
               <h2 className="text-2xl font-bold text-slate-900">Accès Administrateur</h2>
-              <p className="text-slate-500 mt-2">Veuillez entrer votre mot de passe pour continuer.</p>
+              <p className="text-slate-500 mt-2">Connectez-vous avec votre e-mail et votre mot de passe.</p>
             </div>
 
             <form onSubmit={handleLogin} className="space-y-4">
-              <div>
+              <div className="space-y-3">
+                <input
+                  type="email"
+                  autoFocus
+                  autoComplete="username"
+                  placeholder="E-mail"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className={`w-full px-5 py-4 rounded-2xl border-2 outline-none transition-all ${loginError ? 'border-red-500 focus:ring-red-100' : 'border-slate-100 focus:border-blue-500 focus:ring-4 focus:ring-blue-50'
+                    }`}
+                />
                 <input
                   type="password"
-                  autoFocus
+                  autoComplete="current-password"
                   placeholder="Mot de passe"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -188,7 +225,7 @@ const App: React.FC = () => {
                     }`}
                 />
                 {loginError && (
-                  <p className="text-red-500 text-sm font-bold mt-2 ml-2">Mot de passe incorrect.</p>
+                  <p className="text-red-500 text-sm font-bold mt-2 ml-2">E-mail ou mot de passe incorrect.</p>
                 )}
               </div>
               <button
